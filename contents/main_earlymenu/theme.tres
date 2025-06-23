@@ -1,0 +1,10 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://cql86uwxm36wp"]
+
+[sub_resource type="SystemFont" id="SystemFont_jua48"]
+font_names = PackedStringArray("Microsoft YaHei UI", "Microsoft YaHei")
+font_weight = 600
+
+[resource]
+default_font = SubResource("SystemFont_jua48")
+default_font_size = 32
+TabContainer/constants/side_margin = 0
