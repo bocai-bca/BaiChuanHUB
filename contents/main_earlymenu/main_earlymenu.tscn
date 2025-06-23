@@ -22,11 +22,10 @@ script = ExtResource("2_tekc0")
 layout_mode = 2
 theme = ExtResource("1_kq37u")
 tab_alignment = 1
-current_tab = 2
+current_tab = 0
 tab_focus_mode = 0
 
 [node name="Welcome" type="Control" parent="TabContainer"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -73,6 +72,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Installer" type="ScrollContainer" parent="TabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
