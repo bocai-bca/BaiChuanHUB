@@ -1,8 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://b6boxed5w0ujx"]
+[gd_scene load_steps=4 format=3 uid="uid://b6boxed5w0ujx"]
 
 [ext_resource type="Theme" uid="uid://cql86uwxm36wp" path="res://contents/main_earlymenu/theme.tres" id="1_kq37u"]
 [ext_resource type="Script" uid="uid://ubiqiglpve8g" path="res://contents/main_earlymenu/main_earlymenu.gd" id="2_tekc0"]
-[ext_resource type="ButtonGroup" uid="uid://cey28pqe8n2uh" path="res://contents/main_earlymenu/difficult_button_group.tres" id="3_x8ole"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tekc0"]
 bg_color = Color(0, 0, 0, 0.12549)
@@ -22,12 +21,21 @@ script = ExtResource("2_tekc0")
 layout_mode = 2
 theme = ExtResource("1_kq37u")
 tab_alignment = 1
-current_tab = 0
+current_tab = 2
 tab_focus_mode = 0
 
-[node name="Welcome" type="Control" parent="TabContainer"]
+[node name="Welcome" type="VBoxContainer" parent="TabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
+
+[node name="TextureRect" type="TextureRect" parent="TabContainer/Welcome"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContinueButton" type="Button" parent="TabContainer/Welcome"]
+layout_mode = 2
+text = "继续"
 
 [node name="EULA" type="VBoxContainer" parent="TabContainer"]
 visible = false
@@ -57,22 +65,17 @@ text = "[center]百川HUB(早期实验版)最终用户许可协议[/center]
 [node name="AgreeButtonBar" type="HBoxContainer" parent="TabContainer/EULA"]
 layout_mode = 2
 
-[node name="LeftSpacer" type="Control" parent="TabContainer/EULA/AgreeButtonBar"]
+[node name="RejectButton" type="Button" parent="TabContainer/EULA/AgreeButtonBar"]
 layout_mode = 2
 size_flags_horizontal = 3
+text = "不同意该协议并退出"
 
 [node name="AgreeButton" type="Button" parent="TabContainer/EULA/AgreeButtonBar"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 2.0
 text = "我已阅读并同意该协议"
 
-[node name="RightSpacer" type="Control" parent="TabContainer/EULA/AgreeButtonBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-
 [node name="Installer" type="ScrollContainer" parent="TabContainer"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
@@ -91,12 +94,12 @@ layout_mode = 2
 [node name="GameLocation" type="HBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation"]
+[node name="TextGameLocation" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation"]
 layout_mode = 2
 text = "游戏可执行文件位置"
 vertical_alignment = 1
 
-[node name="LineEdit" type="LineEdit" parent="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation"]
+[node name="LineEditGameLocation" type="LineEdit" parent="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = ".../Subnautica/Subnautica.exe"
@@ -116,11 +119,11 @@ vertical_alignment = 1
 [node name="ModPackLocation" type="HBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
+[node name="TextPackLocation" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
 layout_mode = 2
 text = "百川安装包位置"
 
-[node name="LineEdit" type="LineEdit" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
+[node name="LineEditPackLocation" type="LineEdit" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = ".../百川归海x.x.x安装包.zip"
@@ -208,7 +211,7 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer"]
+[node name="Difficults" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "难度"
 horizontal_alignment = 1
@@ -223,37 +226,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="CheckBox" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-button_pressed = true
-button_group = ExtResource("3_x8ole")
-text = "普通"
-alignment = 1
-
-[node name="CheckBox2" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-button_group = ExtResource("3_x8ole")
-text = "困难"
-alignment = 1
-
-[node name="CheckBox3" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-button_group = ExtResource("3_x8ole")
-text = "极难"
-alignment = 1
-
-[node name="CheckBox4" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-button_group = ExtResource("3_x8ole")
-text = "噩梦"
-alignment = 1
-
 [node name="VBoxContainer2" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
 
-[node name="Label" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer2"]
+[node name="AddonPacks" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer2"]
 layout_mode = 2
 text = "附属包"
 horizontal_alignment = 1
@@ -299,7 +277,7 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
-[node name="ModPackNotFound" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify"]
+[node name="BlockTipText" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify"]
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
@@ -341,3 +319,12 @@ scroll_following = true
 autowrap_mode = 1
 selection_enabled = true
 drag_and_drop_selection_enabled = false
+
+[connection signal="pressed" from="TabContainer/Welcome/ContinueButton" to="." method="welcome_continue"]
+[connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/RejectButton" to="." method="eula_reject"]
+[connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/AgreeButton" to="." method="eula_agree"]
+[connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/AutoFindButton" to="." method="installer_auto_find_game"]
+[connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/OpenZIPButton" to="." method="installer_unpack_and_load_install_pack"]
+[connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall" to="." method="installer_install_confirm"]
+[connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall" to="." method="installer_uninstall_confirm"]
+[connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify" to="." method="installer_verify_start"]
