@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://b6boxed5w0ujx"]
+[gd_scene load_steps=5 format=3 uid="uid://b6boxed5w0ujx"]
 
 [ext_resource type="Theme" uid="uid://cql86uwxm36wp" path="res://contents/main_earlymenu/theme.tres" id="1_kq37u"]
 [ext_resource type="Script" uid="uid://ubiqiglpve8g" path="res://contents/main_earlymenu/main_earlymenu.gd" id="2_tekc0"]
+[ext_resource type="Texture2D" uid="uid://beu0pefh5ovbs" path="res://contents/main_earlymenu/welcome_picture_0.jpg" id="3_x8ole"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tekc0"]
 bg_color = Color(0, 0, 0, 0.12549)
@@ -32,6 +33,8 @@ metadata/_tab_index = 0
 [node name="TextureRect" type="TextureRect" parent="TabContainer/Welcome"]
 layout_mode = 2
 size_flags_vertical = 3
+texture = ExtResource("3_x8ole")
+stretch_mode = 6
 
 [node name="ContinueButton" type="Button" parent="TabContainer/Welcome"]
 layout_mode = 2
@@ -197,13 +200,13 @@ tab_focus_mode = 0
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="ReinstallCheck" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install"]
+[node name="ReinstallCheck" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
 layout_mode = 2
 button_pressed = true
 text = "重新安装(用于版本更新、更换难度)"
 expand_icon = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install"]
+[node name="HBoxContainer" type="HBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -221,7 +224,7 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer/ScrollContainer"]
+[node name="DifficultsNodesContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -240,12 +243,12 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer2/ScrollContainer"]
+[node name="AddonsNodesContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer2/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="ConfirmInstall" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install"]
+[node name="ConfirmInstall" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
 layout_mode = 2
 text = "安装：9.2.3、普通、0个附属包"
 
@@ -323,7 +326,9 @@ drag_and_drop_selection_enabled = false
 [connection signal="pressed" from="TabContainer/Welcome/ContinueButton" to="." method="welcome_continue"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/RejectButton" to="." method="eula_reject"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/AgreeButton" to="." method="eula_agree"]
+[connection signal="text_submitted" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/LineEditGameLocation" to="." method="installer_gamepath_submit"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/AutoFindButton" to="." method="installer_auto_find_game"]
+[connection signal="text_submitted" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/LineEditPackLocation" to="." method="installer_packpath_submit"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/OpenZIPButton" to="." method="installer_unpack_and_load_install_pack"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall" to="." method="installer_install_confirm"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall" to="." method="installer_uninstall_confirm"]

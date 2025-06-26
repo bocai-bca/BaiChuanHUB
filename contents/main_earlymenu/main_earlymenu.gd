@@ -45,6 +45,9 @@ const InstallerOperationTabsNames: PackedStringArray = [
 	"文件校验",
 ]
 
+## 百川安装器
+static var installer: BaiChuanInstaller = BaiChuanInstaller.new()
+
 ## 是否已同意EULA
 var is_eula_agreed: bool = false:
 	set(value):
@@ -69,9 +72,9 @@ func _ready() -> void:
 
 ## 程序关闭方法，此方法中要写临时目录的释放行为
 func quit_program() -> void:
-	pass
+	get_tree().quit()
 
-#region 按钮触发函数
+#region 界面元素触发函数
 ## 欢迎/继续
 func welcome_continue() -> void:
 	if (is_eula_agreed): #如果已同意EULA
@@ -107,4 +110,14 @@ func installer_uninstall_confirm() -> void:
 ## 安装器/验证/开始验证
 func installer_verify_start() -> void:
 	pass
+
+## 安装器/游戏路径
+func installer_gamepath_submit(new_text: String) -> void:
+	pass
+
+## 安装器/安装包路径
+func installer_packpath_submit(new_text: String) -> void:
+	pass
+
+
 #endregion
