@@ -1,0 +1,42 @@
+压缩包结构：以[]开头的代表文件夹
+根
+	[]addons 所有附属包
+		[]一个附属包
+			install.bcis 附属包的安装脚本
+			uninstall.bcis 附属包的卸载脚本，附属包被安装后，该脚本将被合并在主卸载脚本的头部
+	[]data 所有数据
+		...存放任意数据，怎么操作将由脚本决定
+	[]difficults 所有难度的脚本
+		[] 一个难度
+			install.bcis 难度的安装脚本
+			uninstall.bcis 难度的卸载脚本
+	[]frameworks 前置框架，如BepInEx和QMods，本文件夹的内容将在安装过程中首先被复制到游戏根目录
+		[]BepInEx
+			[]core
+			[]plugins
+				...QModsInstaller.dll
+			...其他BepInEx组件
+		[]QMods
+		winhttp.dll
+		...其他BepInEx组件
+	[]mods 所有mod本体
+		[] 一个mod本体，名称随意，里面容纳该mod本体的所有数据
+	pack.json 安装包元数据，记录一些必要信息
+
+pack.json结构：
+{}
+	version Num代表当前安装包的版本
+	version_name Num代表当前安装包的版本名称
+	fork_version Num分支版本，用于在主版本不变的情况进行分支，使得发布分支版本时不影响主版本更新
+	difficults Arr容纳所有难度的数据
+		{}一个难度
+			path Str难度的路径，相对于压缩包的difficults
+			name Str难度的名称，用于显示在UI中
+	mods Arr容纳所有mod的数据
+		{}一个mod
+			path Str该mod的路径，相对于压缩包的mods
+			name Str该mod的名称，用于在安装脚本中引用
+			
+
+安装器操作脚本：
+操作脚本采用类似mcfunction的命令行方式进行
