@@ -172,6 +172,11 @@ QMods存在迹象
 scroll_active = false
 autowrap_mode = 0
 
+[node name="Refresh" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo"]
+visible = false
+layout_mode = 2
+text = "刷新"
+
 [node name="GameNotFound" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo"]
 layout_mode = 2
 size_flags_vertical = 6
@@ -250,7 +255,8 @@ size_flags_vertical = 3
 
 [node name="ConfirmInstall" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
 layout_mode = 2
-text = "安装：9.2.3、普通、0个附属包"
+disabled = true
+text = "请选择难度"
 
 [node name="ModPackNotFound" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install"]
 visible = false
@@ -326,10 +332,13 @@ drag_and_drop_selection_enabled = false
 [connection signal="pressed" from="TabContainer/Welcome/ContinueButton" to="." method="welcome_continue"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/RejectButton" to="." method="eula_reject"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/AgreeButton" to="." method="eula_agree"]
+[connection signal="focus_exited" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/LineEditGameLocation" to="." method="installer_gamepath_lose_focus"]
 [connection signal="text_submitted" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/LineEditGameLocation" to="." method="installer_gamepath_submit"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/AutoFindButton" to="." method="installer_auto_find_game"]
+[connection signal="focus_exited" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/LineEditPackLocation" to="." method="installer_packpath_lose_focus"]
 [connection signal="text_submitted" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/LineEditPackLocation" to="." method="installer_packpath_submit"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/OpenZIPButton" to="." method="installer_unpack_and_load_install_pack"]
+[connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo/Refresh" to="." method="installer_state_refresh"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall" to="." method="installer_install_confirm"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall" to="." method="installer_uninstall_confirm"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify" to="." method="installer_verify_start"]
