@@ -24,8 +24,10 @@ class_name Main_EarlyMenu
 @onready var n_line_edit_game_location: LineEdit = $TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/LineEditGameLocation as LineEdit
 @onready var n_line_edit_pack_location: LineEdit = $TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/LineEditPackLocation as LineEdit
 @onready var n_log_text: RichTextLabel = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/Log/LogText as RichTextLabel
+@onready var n_operation_install_reinstall_checkbox: CheckBox = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ReinstallCheck as CheckBox
 @onready var n_operation_install_confirm_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall as Button
-
+@onready var n_operation_install_option_difficults_container: VBoxContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer/DifficultsNodesContainer as VBoxContainer
+@onready var n_operation_install_option_addons_container: VBoxContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer/ScrollContainer/AddonsNodesContainer as VBoxContainer
 
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 720)
@@ -54,6 +56,8 @@ const InstallerOperationTabsNames: PackedStringArray = [
 	"卸载",
 	"文件校验",
 ]
+## 安装选项的难度按钮组
+const DIFFICULT_BUTTON_GROUP: ButtonGroup = preload("res://contents/main_earlymenu/difficult_button_group.tres")
 
 ## 百川安装器
 static var installer: BaiChuanInstaller = BaiChuanInstaller.new()
@@ -63,6 +67,22 @@ var is_eula_agreed: bool = false:
 	set(value):
 		if (value and is_node_ready()):
 			n_tab_container.set_tab_disabled(Tabs.INSTALLER, false) #解锁安装器
+## 游戏路径指定是否已就绪
+var is_game_path_ready: bool = false
+## 安装包是否已加载成功
+var is_pack_load_success: bool = false
+## 包元数据缓存
+var meta_report: BaiChuanInstaller.PackMetaReport
+## 安装选项难度节点列表
+var install_option_difficults_nodes: Array[CheckBox] = []
+## 安装选项附属包节点列表
+var install_option_addons_nodes: Array[CheckBox] = []
+## 当前指定的安装难度索引号，-1代表无效
+var install_option_difficult_current: int = -1
+## 当前勾选的所有待安装附属包索引号
+var install_option_addons_current: PackedInt32Array = []
+## 安装选项重新安装
+var install_option_reinstall: bool = false
 
 func _notification(what: int) -> void:
 	match (what):
@@ -140,6 +160,93 @@ func refresh_game_info() -> void:
 			text_baichuan_installed = "[color=green]是[/color]"
 	n_state_info_text.text = text.format([text_version_verify, text_bepinex_exist, text_qmods_exist, text_baichuan_installed])
 
+## 加载安装包
+func load_install_pack() -> void:
+	is_pack_load_success = false
+	n_line_edit_pack_location.text = n_line_edit_pack_location.text.trim_prefix("\"").trim_suffix("\"") #去除引号
+	if (not n_line_edit_pack_location.text.is_absolute_path()): #如果输入不是可用的绝对路径
+		n_mod_pack_tip_text.text = "需填写一个指向安装包的绝对路径"
+		n_mod_pack_tip_text.modulate = Color.RED
+		refresh_log() #刷新日志
+		return
+	if (not FileAccess.file_exists(n_line_edit_pack_location.text)): #如果文件不存在
+		n_mod_pack_tip_text.text = "路径指向的文件不存在或不可见"
+		n_mod_pack_tip_text.modulate = Color.RED
+		refresh_log() #刷新日志
+		return
+	meta_report = installer.load_new_pack(n_line_edit_pack_location.text)
+	if (meta_report == null): #如果加载失败
+		n_mod_pack_tip_text.text = "安装包加载失败"
+		n_mod_pack_tip_text.modulate = Color.RED
+		refresh_log() #刷新日志
+		return
+	is_pack_load_success = true
+	n_mod_pack_tip_text.text = "安装包就绪: 版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons_names.size()) + "个附属包"
+	n_mod_pack_tip_text.modulate = Color.GREEN
+	refresh_log() #刷新日志
+
+## 放置安装选项节点
+func place_install_option_nodes() -> void:
+	## 00清除旧节点
+	for node in install_option_difficults_nodes + install_option_addons_nodes: #遍历所有选项
+		node.queue_free()
+	install_option_difficults_nodes = []
+	install_option_addons_nodes = []
+	## /00
+	## 01放置新节点
+	if (meta_report == null): #如果元数据报告为null
+		return
+	for i in meta_report.difficults_names.size(): #按索引遍历所有难度名称
+		var new_check_box: CheckBox = CheckBox.new()
+		new_check_box.text = meta_report.difficults_names[i]
+		new_check_box.button_group = DIFFICULT_BUTTON_GROUP
+		new_check_box.set_meta(&"install_option_index", i) #添加记录索引的元数据
+		new_check_box.pressed.connect(
+			func() -> void:
+				install_option_difficult_current = new_check_box.get_meta(&"install_option_index", -1)
+				update_install_confirm_button()
+		)
+		install_option_difficults_nodes.append(new_check_box)
+		n_operation_install_option_difficults_container.add_child(new_check_box)
+	for i in meta_report.addons_names.size(): #按索引遍历所有附属包名称
+		var new_check_box: CheckBox = CheckBox.new()
+		new_check_box.text = meta_report.addons_names[i]
+		new_check_box.set_meta(&"install_option_index", i) #添加记录索引的元数据
+		new_check_box.pressed.connect(
+			func() -> void:
+				var index: int = new_check_box.get_meta(&"install_option_index", -1)
+				if (new_check_box.button_pressed): #如果按钮处于按下状态(正被勾选)
+					if (not install_option_addons_current.has(index)): #如果附属包待安装列表里没记录本按钮的索引
+						install_option_addons_current.append(index) #将本按钮的索引添加到附属包待安装列表
+				else: #否则(按钮不处于按下状态(未被勾选))
+					while (install_option_addons_current.has(index)): #循环直到附属包待安装列表里不再有记录本按钮的索引
+						var find_result: int = install_option_addons_current.find(index)
+						if (find_result == -1):
+							break
+						install_option_addons_current.remove_at(find_result)
+				update_install_confirm_button()
+		)
+		install_option_addons_nodes.append(new_check_box)
+		n_operation_install_option_addons_container.add_child(new_check_box)
+	## /01
+
+## 更新安装确认按钮
+func update_install_confirm_button() -> void:
+	if (not is_game_path_ready): #如果游戏路径尚未就绪
+		n_operation_install_confirm_button.disabled = true
+		n_operation_install_confirm_button.text = "请先设置游戏位置以确定安装位置"
+	elif (not is_pack_load_success): #如果安装包没有加载完成
+		n_operation_install_confirm_button.disabled = true
+		n_operation_install_confirm_button.text = "安装包未加载"
+	elif (install_option_difficult_current != -1):
+		n_operation_install_confirm_button.disabled = false
+		var install_text_prefix: String
+		install_text_prefix = "重新安装：" if install_option_reinstall else "开始安装："
+		n_operation_install_confirm_button.text = install_text_prefix + meta_report.version_name + "、" + meta_report.difficults_names[install_option_difficult_current] + "、" + str(install_option_addons_current.size()) + "个附属包"
+	else:
+		n_operation_install_confirm_button.disabled = true
+		n_operation_install_confirm_button.text = "请选择难度"
+
 #region 界面元素触发函数
 ## 欢迎/继续
 func welcome_continue() -> void:
@@ -167,13 +274,20 @@ func installer_auto_find_game() -> void:
 
 ## 安装器/解压并加载安装包
 func installer_unpack_and_load_install_pack() -> void:
-	pass
+	load_install_pack()
+	place_install_option_nodes()
+	update_install_confirm_button()
 
 ## 安装器/状态/刷新
 func installer_state_refresh() -> void:
 	installer_gamepath_lose_focus()
 	refresh_game_info()
 	refresh_log() #刷新日志
+
+## 安装器/安装/重新安装复选框
+func installer_install_reinstall_checkbox() -> void:
+	install_option_reinstall = n_operation_install_reinstall_checkbox.button_pressed
+	update_install_confirm_button()
 
 ## 安装器/安装/确认安装
 func installer_install_confirm() -> void:
@@ -190,29 +304,43 @@ func installer_verify_start() -> void:
 ## 安装器/游戏路径提交
 func installer_gamepath_submit(new_text: String) -> void:
 	if (new_text.is_empty()): #如果为空
+		is_game_path_ready = false
 		n_game_tip_text.text = "若要进行操作，必须指定游戏位置"
 		n_game_tip_text.modulate = Color.RED
 		hide_game_info(GameInfoState.NOT_FOUND)
+		update_install_confirm_button()
+		refresh_log() #刷新日志
 		return
 	if (not new_text.is_absolute_path() or new_text.get_file() != "Subnautica.exe"): #如果内容不是绝对路径或不是指向Subnautica.exe的路径
+		is_game_path_ready = false
 		n_game_tip_text.text = "需填写一个指向Subnautica.exe的绝对路径"
 		n_game_tip_text.modulate = Color.RED
 		hide_game_info(GameInfoState.PATH_UNVALID)
+		update_install_confirm_button()
+		refresh_log() #刷新日志
 		return
 	if (not FileAccess.file_exists(new_text)): #如果文件不存在
+		is_game_path_ready = false
 		n_game_tip_text.text = "路径指向的文件不存在或不可见"
 		n_game_tip_text.modulate = Color.RED
 		hide_game_info(GameInfoState.PATH_UNVALID)
+		update_install_confirm_button()
+		refresh_log() #刷新日志
 		return
 	if (not installer.verify_md5(new_text)): #如果指定的路径不通过md5验证
+		is_game_path_ready = true
 		n_game_tip_text.text = "未通过哈希校验，可能原因：游戏版本不是68598、游戏文件损坏"
 		n_game_tip_text.modulate = Color.YELLOW
 		show_game_info()
+		update_install_confirm_button()
+		refresh_log() #刷新日志
 		return
 	else: #否则(指定的路径通过了md5验证)
+		is_game_path_ready = true
 		n_game_tip_text.text = "就绪"
 		n_game_tip_text.modulate = Color.GREEN
 		show_game_info()
+	update_install_confirm_button()
 	refresh_log() #刷新日志
 
 ## 安装器/游戏路径失去焦点
@@ -220,14 +348,16 @@ func installer_gamepath_lose_focus() -> void:
 	installer_gamepath_submit(n_line_edit_game_location.text)
 
 ## 安装器/安装包路径提交
-func installer_packpath_submit(new_text: String) -> void:
+func installer_packpath_submit(_new_text: String) -> void:
+	#load_install_pack()
 	pass
 
 ## 安装器/安装包路径失去焦点
 func installer_packpath_lose_focus() -> void:
-	installer_packpath_submit(n_line_edit_pack_location.text)
+	#installer_packpath_submit("")
+	pass
 
 ## 刷新日志，在任何(可能)能够影响日志的菜单元素被触发以后均调用此方法，由其他连接了信号的方法调用
 func refresh_log() -> void:
-	n_log_text.text = installer.log #将安装器的日志内容传递到本实例
+	n_log_text.text = installer.log_string #将安装器的日志内容传递到本实例
 #endregion

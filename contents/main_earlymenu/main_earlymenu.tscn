@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://b6boxed5w0ujx"]
+[gd_scene load_steps=6 format=3 uid="uid://b6boxed5w0ujx"]
 
 [ext_resource type="Theme" uid="uid://cql86uwxm36wp" path="res://contents/main_earlymenu/theme.tres" id="1_kq37u"]
 [ext_resource type="Script" uid="uid://ubiqiglpve8g" path="res://contents/main_earlymenu/main_earlymenu.gd" id="2_tekc0"]
 [ext_resource type="Texture2D" uid="uid://beu0pefh5ovbs" path="res://contents/main_earlymenu/welcome_picture_0.jpg" id="3_x8ole"]
+[ext_resource type="ButtonGroup" uid="uid://cey28pqe8n2uh" path="res://contents/main_earlymenu/difficult_button_group.tres" id="4_sh76g"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tekc0"]
 bg_color = Color(0, 0, 0, 0.12549)
@@ -130,6 +131,7 @@ text = "百川安装包位置"
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = ".../百川归海x.x.x安装包.zip"
+emoji_menu_enabled = false
 
 [node name="OpenZIPButton" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
 layout_mode = 2
@@ -139,7 +141,7 @@ text = "解压并加载"
 modulate = Color(0, 1, 0, 1)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "  "
+clip_text = true
 
 [node name="ConsolePanel" type="HBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -207,7 +209,6 @@ metadata/_tab_index = 0
 
 [node name="ReinstallCheck" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
 layout_mode = 2
-button_pressed = true
 text = "重新安装(用于版本更新、更换难度)"
 expand_icon = true
 
@@ -215,40 +216,44 @@ expand_icon = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer"]
+[node name="DifficultContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Difficults" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer"]
+[node name="Difficults" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer"]
 layout_mode = 2
 text = "难度"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="DifficultsNodesContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer/ScrollContainer"]
+[node name="DifficultsNodesContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer"]
+[node name="CheckBox" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer/DifficultsNodesContainer"]
+layout_mode = 2
+button_group = ExtResource("4_sh76g")
+
+[node name="AddonsContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
 
-[node name="AddonPacks" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer2"]
+[node name="AddonPacks" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer"]
 layout_mode = 2
 text = "附属包"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer2"]
+[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="AddonsNodesContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/VBoxContainer2/ScrollContainer"]
+[node name="AddonsNodesContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -256,7 +261,7 @@ size_flags_vertical = 3
 [node name="ConfirmInstall" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
 layout_mode = 2
 disabled = true
-text = "请选择难度"
+text = "请先设置游戏位置以确定安装位置"
 
 [node name="ModPackNotFound" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install"]
 visible = false
@@ -323,7 +328,6 @@ theme_override_font_sizes/bold_font_size = 20
 theme_override_styles/focus = SubResource("StyleBoxFlat_tekc0")
 theme_override_styles/normal = SubResource("StyleBoxFlat_tekc0")
 bbcode_enabled = true
-fit_content = true
 scroll_following = true
 autowrap_mode = 1
 selection_enabled = true
@@ -339,6 +343,7 @@ drag_and_drop_selection_enabled = false
 [connection signal="text_submitted" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/LineEditPackLocation" to="." method="installer_packpath_submit"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/OpenZIPButton" to="." method="installer_unpack_and_load_install_pack"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo/Refresh" to="." method="installer_state_refresh"]
+[connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ReinstallCheck" to="." method="installer_install_reinstall_checkbox"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall" to="." method="installer_install_confirm"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall" to="." method="installer_uninstall_confirm"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify" to="." method="installer_verify_start"]
