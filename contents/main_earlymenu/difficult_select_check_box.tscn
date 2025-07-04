@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://didru7ybwh5hj"]
+
+[ext_resource type="ButtonGroup" uid="uid://cey28pqe8n2uh" path="res://contents/main_earlymenu/difficult_button_group.tres" id="1_uyrad"]
+[ext_resource type="Script" uid="uid://cgc11q4nuiert" path="res://contents/main_earlymenu/difficult_select_check_box.gd" id="2_qmiik"]
+
+[node name="DifficultSelectCheckBox" type="CheckBox"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+button_group = ExtResource("1_uyrad")
+script = ExtResource("2_qmiik")

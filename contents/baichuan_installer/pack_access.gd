@@ -25,6 +25,8 @@ const ADDON_META: String = "addon.json"
 var dir_access: DirAccess
 ## 包元数据，相当于pack.json的反序列化结果
 var pack_meta: PackMeta
+## 存储所有已解析的(命令格式上可读的)脚本，采用该脚本在安装包中的路径作为键
+var scripts_parsed: Dictionary[String, BaiChuanInstaller_ScriptExecuter.ScriptParsed]
 
 ## 开启新包，会将文件读入自身的pack_dir_access成员变量中，如果失败或发生问题将返回false，成功返回true。尽管发生问题，dir_access仍然会被覆盖
 func open_new(pack_path: String, logger: BaiChuanInstaller_Logger) -> bool:
@@ -118,6 +120,7 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 ## 验证安装包内容。在执行前需确保安装包已载入无误，并且已执行过parse_meta()，本方法依赖已反序列化的数据，否则将发生预期之外的事情
 ## 本方法将检查所有由元数据注册引用的项是否全都存在、所有被引用的脚本是否都正确无误
 func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
+	scripts_parsed.clear()
 	var result: bool = true
 	for difficult in pack_meta.difficults_list: #遍历所有难度
 		if (not dir_access.dir_exists(DIFFICULTS_DIR.path_join(difficult.path))): #如果不存在指定的难度目录
@@ -127,6 +130,9 @@ func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
 		if (not dir_access.file_exists(DIFFICULTS_DIR.path_join(difficult.path).path_join(INSTALL_SCRIPT_NAME))): #如果不存在安装脚本
 			logger.log_error("解析安装包时发现问题，难度\"" + difficult.name + "\"缺少安装脚本")
 			result = false
+		else: #否则(存在安装脚本)
+			#### 制作ScriptParsed实例并添加到scripts_parsed
+			pass
 		if (not dir_access.file_exists(DIFFICULTS_DIR.path_join(difficult.path).path_join(UNINSTALL_SCRIPT_NAME))): #如果不存在卸载脚本
 			logger.log_error("解析安装包时发现问题，难度\"" + difficult.name + "\"缺少卸载脚本")
 			result = false

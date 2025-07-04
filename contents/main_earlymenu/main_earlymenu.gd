@@ -74,9 +74,9 @@ var is_pack_load_success: bool = false
 ## 包元数据缓存
 var meta_report: BaiChuanInstaller.PackMetaReport
 ## 安装选项难度节点列表
-var install_option_difficults_nodes: Array[CheckBox] = []
+var install_option_difficults_nodes: Array[EarlyMenu_DifficultSelectCheckBox] = []
 ## 安装选项附属包节点列表
-var install_option_addons_nodes: Array[CheckBox] = []
+var install_option_addons_nodes: Array[EarlyMenu_AddonSelectCheckBox] = []
 ## 当前指定的安装难度索引号，-1代表无效
 var install_option_difficult_current: int = -1
 ## 当前勾选的所有待安装附属包索引号
@@ -197,30 +197,29 @@ func place_install_option_nodes() -> void:
 	if (meta_report == null): #如果元数据报告为null
 		return
 	for i in meta_report.difficults_names.size(): #按索引遍历所有难度名称
-		var new_check_box: CheckBox = CheckBox.new()
+		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate()
 		new_check_box.text = meta_report.difficults_names[i]
-		new_check_box.button_group = DIFFICULT_BUTTON_GROUP
-		new_check_box.set_meta(&"install_option_index", i) #添加记录索引的元数据
+		new_check_box.difficult_index = i
 		new_check_box.pressed.connect(
 			func() -> void:
-				install_option_difficult_current = new_check_box.get_meta(&"install_option_index", -1)
+				install_option_difficult_current = new_check_box.difficult_index
+				update_install_addons_checkboxes_disable()
 				update_install_confirm_button()
 		)
 		install_option_difficults_nodes.append(new_check_box)
 		n_operation_install_option_difficults_container.add_child(new_check_box)
-	for i in meta_report.addons_names.size(): #按索引遍历所有附属包名称
-		var new_check_box: CheckBox = CheckBox.new()
+	for i in meta_report.addons.addons_names.size(): #按索引遍历所有附属包名称
+		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate()
 		new_check_box.text = meta_report.addons_names[i]
-		new_check_box.set_meta(&"install_option_index", i) #添加记录索引的元数据
+		new_check_box.addon_index = i
 		new_check_box.pressed.connect(
 			func() -> void:
-				var index: int = new_check_box.get_meta(&"install_option_index", -1)
 				if (new_check_box.button_pressed): #如果按钮处于按下状态(正被勾选)
-					if (not install_option_addons_current.has(index)): #如果附属包待安装列表里没记录本按钮的索引
-						install_option_addons_current.append(index) #将本按钮的索引添加到附属包待安装列表
+					if (not install_option_addons_current.has(new_check_box.addon_index)): #如果附属包待安装列表里没记录本按钮的索引
+						install_option_addons_current.append(new_check_box.addon_index) #将本按钮的索引添加到附属包待安装列表
 				else: #否则(按钮不处于按下状态(未被勾选))
-					while (install_option_addons_current.has(index)): #循环直到附属包待安装列表里不再有记录本按钮的索引
-						var find_result: int = install_option_addons_current.find(index)
+					while (install_option_addons_current.has(new_check_box.addon_index)): #循环直到附属包待安装列表里不再有记录本按钮的索引
+						var find_result: int = install_option_addons_current.find(new_check_box.addon_index)
 						if (find_result == -1):
 							break
 						install_option_addons_current.remove_at(find_result)
@@ -229,6 +228,21 @@ func place_install_option_nodes() -> void:
 		install_option_addons_nodes.append(new_check_box)
 		n_operation_install_option_addons_container.add_child(new_check_box)
 	## /01
+
+## 更新附属包禁用(基于当前所选的难度，如果当前没有所选难度，将启用所有支持通配难度的附属包)
+func update_install_addons_checkboxes_disable() -> void:
+	for checkbox in install_option_addons_nodes: #遍历所有附属包节点
+		if (checkbox.if_difficult_disable(install_option_difficult_current)): #调用按钮的自禁用检查方法，并获取执行之后按钮的开关状态
+			## 正被勾选
+			if (not install_option_addons_current.has(checkbox.addon_index)): #如果附属包待安装列表里没记录本按钮的索引
+				install_option_addons_current.append(checkbox.addon_index) #将本按钮的索引添加到附属包待安装列表
+		else:
+			## 未被勾选或因被禁用而关闭
+			while (install_option_addons_current.has(checkbox.addon_index)): #循环直到附属包待安装列表里不再有记录本按钮的索引
+				var find_result: int = install_option_addons_current.find(checkbox.addon_index)
+				if (find_result == -1):
+					break
+				install_option_addons_current.remove_at(find_result)
 
 ## 更新安装确认按钮
 func update_install_confirm_button() -> void:

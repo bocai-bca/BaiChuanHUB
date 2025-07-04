@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://d063x0yxa21c8"]
+
+[ext_resource type="Script" uid="uid://cgioluuo7uv0t" path="res://contents/main_earlymenu/addon_select_check_box.gd" id="1_j16pn"]
+
+[node name="AddonSelectCheckBox" type="CheckBox"]
+offset_right = 24.0
+offset_bottom = 24.0
+script = ExtResource("1_j16pn")
