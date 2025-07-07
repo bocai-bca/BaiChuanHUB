@@ -21,12 +21,14 @@ const ROOT_PACK_META: String = "pack.json"
 ## 附属包元数据
 const ADDON_META: String = "addon.json"
 
+## 命令处理器实例
+var script_handler: BaiChuanInstaller_ScriptHandler = BaiChuanInstaller_ScriptHandler.new()
 ## 包DirAccess
 var dir_access: DirAccess
 ## 包元数据，相当于pack.json的反序列化结果
 var pack_meta: PackMeta
 ## 存储所有已解析的(命令格式上可读的)脚本，采用该脚本在安装包中的路径作为键
-var scripts_parsed: Dictionary[String, BaiChuanInstaller_ScriptExecuter.ScriptParsed]
+var scripts_parsed: Dictionary[String, BaiChuanInstaller_ScriptHandler.ScriptParsed]
 
 ## 开启新包，会将文件读入自身的pack_dir_access成员变量中，如果失败或发生问题将返回false，成功返回true。尽管发生问题，dir_access仍然会被覆盖
 func open_new(pack_path: String, logger: BaiChuanInstaller_Logger) -> bool:
@@ -71,6 +73,7 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 	for difficult_object in parsed["difficults"] as Array[Dictionary]:
 		if (difficult_object.has("path") and difficult_object.has("name")):
 			pack_meta.difficults_list.append(PathNameObject.new(difficult_object["path"], difficult_object["name"]))
+			continue
 		logger.log_error("解析元数据时发现问题，难度列表有必要键丢失，解析将中止")
 		return false
 	for mod_object in parsed["mods"] as Array[Dictionary]:
@@ -82,6 +85,7 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 					return false
 				mod_registry_object.hash_list.append(HashListObject.new(hash_list_obj["path"], hash_list_obj["md5"]))
 			pack_meta.mods_list.append(mod_registry_object)
+			continue
 		logger.log_error("解析元数据时发现问题，模组列表有必要键丢失，解析将中止")
 		return false
 	for addon_object in parsed["addons"] as Array[Dictionary]:
@@ -108,10 +112,12 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 							return false
 						mod_registry_object.hash_list.append(HashListObject.new(hash_list_obj["path"], hash_list_obj["md5"]))
 					addon_registry_object.mods.append(mod_registry_object)
+					continue
 				logger.log_error("解析附属包\"" + addon_name + "\"(" + addon_path + ")元数据时发现问题，模组列表有必要键丢失，解析将中止")
 				return false
-			addon_registry_object.support_difficults = dir_access.get_directories_at(ADDONS_DIR.path_join(addon_path).path_join(DIFFICULTS_DIR)) #获取该附属包的所有难度
+			addon_registry_object.support_difficults = dir_access.get_directories_at(dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(addon_path).path_join(DIFFICULTS_DIR)) #获取该附属包的所有难度
 			pack_meta.addons_list.append(addon_registry_object)
+			continue
 		logger.log_error("解析元数据时发现问题，附属包列表有必要键丢失，解析将中止")
 		return false
 	## /01
@@ -131,11 +137,24 @@ func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
 			logger.log_error("解析安装包时发现问题，难度\"" + difficult.name + "\"缺少安装脚本")
 			result = false
 		else: #否则(存在安装脚本)
-			#### 制作ScriptParsed实例并添加到scripts_parsed
-			pass
+			var script_path: String = DIFFICULTS_DIR.path_join(difficult.path).path_join(INSTALL_SCRIPT_NAME)
+			var script_splitted: Array[PackedStringArray] = script_handler.split_script(FileAccess.get_file_as_string(dir_access.get_current_dir().path_join(script_path)), logger)
+			if (not script_handler.was_last_operation_error): #如果没报错
+				scripts_parsed[script_path] = BaiChuanInstaller_ScriptHandler.ScriptParsed.new(script_splitted)
+			else: #否则(有报错)
+				logger.log_error("安装脚本\"" + script_path + "\"分段时出错")
+				result = false
 		if (not dir_access.file_exists(DIFFICULTS_DIR.path_join(difficult.path).path_join(UNINSTALL_SCRIPT_NAME))): #如果不存在卸载脚本
 			logger.log_error("解析安装包时发现问题，难度\"" + difficult.name + "\"缺少卸载脚本")
 			result = false
+		else: #否则(存在卸载脚本)
+			var script_path: String = DIFFICULTS_DIR.path_join(difficult.path).path_join(UNINSTALL_SCRIPT_NAME)
+			var script_splitted: Array[PackedStringArray] = script_handler.split_script(FileAccess.get_file_as_string(dir_access.get_current_dir().path_join(script_path)), logger)
+			if (not script_handler.was_last_operation_error): #如果没报错
+				scripts_parsed[script_path] = BaiChuanInstaller_ScriptHandler.ScriptParsed.new(script_splitted)
+			else: #否则(有报错)
+				logger.log_error("卸载脚本\"" + script_path + "\"分段时出错")
+				result = false
 	for mod in pack_meta.mods_list: #遍历所有模组
 		if (not dir_access.dir_exists(MODS_DIR.path_join(mod.path))): #如果不存在指定的模组目录
 			logger.log_error("解析安装包时发现问题，安装包缺少模组\"" + mod.name + "\"，注册路径：" + mod.path)
@@ -163,7 +182,7 @@ func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
 			result = false
 			continue
 		for addon_mod in addon.mods: #遍历该附属包的所有模组
-			var this_mod_combined_path: String = addon_path.path_join(addon_mod.path) #合并一个当前模组相对于安装包根目录的路径
+			var this_mod_combined_path: String = addon_path.path_join(MODS_DIR).path_join(addon_mod.path) #合并一个当前模组相对于安装包根目录的路径
 			if (not dir_access.dir_exists(this_mod_combined_path)): #如果不存在指定的模组目录
 				logger.log_error("解析安装包时发现问题，附属包\"" + addon.name + "\"缺少模组\"" + addon_mod.name + "\"，注册路径：" + addon_mod.path)
 				result = false

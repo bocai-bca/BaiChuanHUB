@@ -1,19 +1,19 @@
 extends RefCounted
-class_name BaiChuanInstaller_ScriptExecuter
-## 百川安装器-脚本执行器
+class_name BaiChuanInstaller_ScriptHandler
+## 百川安装器-脚本处理器
 
 ## 上一次方法调用是否包含错误
 var was_last_operation_error: bool = false
 
 ## 分段脚本，同时检查命令格式，返回一个容纳了分段后命令的数组。如果出错was_last_operation_error会变为true，届时该方法返回的输出请勿信任
 func split_script(script_content: String, logger: BaiChuanInstaller_Logger) -> Array[PackedStringArray]:
-	was_last_operation_error = true
+	was_last_operation_error = false
 	var commands: PackedStringArray = script_content.split("\n", false)
 	var result: Array[PackedStringArray] = []
 	for command in commands: #遍历每行文本
 		var splitted: PackedStringArray = CommandSplitter.split(command, logger) #获取一个已分段数组，如果为空数组代表出错
 		if (splitted.is_empty()): #如果数组为空，意味着分段时出错
-			was_last_operation_error = false
+			was_last_operation_error = true
 			logger.log_error("命令分段出错，该行命令完整内容：" + command)
 		result.append(splitted)
 	return result
@@ -22,6 +22,8 @@ func split_script(script_content: String, logger: BaiChuanInstaller_Logger) -> A
 class ScriptParsed extends RefCounted:
 	## 该脚本的已分段命令
 	var commands_splitted: Array[PackedStringArray]
+	func _init(new_commands_splitted: Array[PackedStringArray]) -> void:
+		commands_splitted = new_commands_splitted
 
 class CommandSplitter extends Object:
 	## 空格

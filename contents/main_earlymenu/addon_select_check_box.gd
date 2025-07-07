@@ -12,8 +12,12 @@ var support_difficults: PackedByteArray
 
 ## 根据给定的难度索引，结合自身存储的支持难度判断自身是否需要禁用，并执行操作后返回操作后自身的开关状态
 func if_difficult_disable(current_difficult: int) -> bool:
-	if (not support_difficults.has(current_difficult)): #如果自身支持列表不含给定的难度
-		if (support_difficults.has(-1)): #如果自身支持通配难度
+	if (support_difficults.has(current_difficult)): #如果自身支持列表包含给定的难度
+		## 该按钮直接支持给定难度(与通配无关)
+		disabled = false #启用
+		return button_pressed
+	else: #否则(自身支持列表不含给定的难度)
+		if (support_difficults.has(255)): #如果自身支持通配难度
 			## 不支持给定难度但支持通配
 			disabled = false #启用
 			return button_pressed
@@ -21,7 +25,3 @@ func if_difficult_disable(current_difficult: int) -> bool:
 		disabled = true #禁用
 		button_pressed = false
 		return false
-	else: #否则(自身支持列表包含给定的难度)
-		## 该按钮直接支持给定难度(与通配无关)
-		disabled = false #启用
-		return button_pressed

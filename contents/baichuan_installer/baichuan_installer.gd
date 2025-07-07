@@ -17,8 +17,6 @@ var log_string: String:
 var game_searcher: BaiChuanInstaller_GameSearcher = BaiChuanInstaller_GameSearcher.new()
 ## 安装包访问实例
 var pack_access: BaiChuanInstaller_PackAccess = BaiChuanInstaller_PackAccess.new()
-## 命令执行器实例
-var script_executer: BaiChuanInstaller_ScriptExecuter = BaiChuanInstaller_ScriptExecuter.new()
 
 ## 搜寻游戏的高级封装，将返回一个md5匹配的绝对路径，如果寻找不到md5匹配的路径但至少找到了文件存在的路径，就返回一个该条件的路径
 func search_game() -> String:
@@ -114,19 +112,21 @@ func load_new_pack(pack_path: String) -> PackMetaReport:
 	result.fork_version = pack_access.pack_meta.fork_version
 	result.mods_count = pack_access.pack_meta.mods_list.size()
 	result.difficults_names = []
+	result.difficults_pathes = []
 	for difficult in pack_access.pack_meta.difficults_list: #遍历难度列表
 		result.difficults_names.append(difficult.name)
-	result.addons_names = []
+		result.difficults_pathes.append(difficult.path)
+	result.addons = []
 	for addon in pack_access.pack_meta.addons_list: #遍历附属包列表
 		var addon_meta:PackMetaReport_AddonsMeta = PackMetaReport_AddonsMeta.new(addon.name)
 		for addon_support_difficult in addon.support_difficults: #遍历该附属包支持的所有难度
-			var find_index: int = result.difficults_names.find(addon_support_difficult)
+			var find_index: int = result.difficults_pathes.find(addon_support_difficult)
 			if (find_index == -1 and addon_support_difficult == "_"): #如果未找到，并且该难度为_，说明是通配难度
-				addon_meta.support_difficults = [-1] #只需要添加一个-1代表啥都有即可
-				break
-			if (not addon_meta.support_difficults.has(find_index)): #如果支持的难度列表中不存在当前获得的索引，此判断是用来防止重复添加元素
+				addon_meta.support_difficults = [255] #只需要添加一个255代表啥都有即可
+				break #既然有通配难度的话那么只要记录它就行了，直接break
+			if (find_index != -1 and not addon_meta.support_difficults.has(find_index)): #如果支持的难度列表中不存在当前获得的索引，此判断是用来防止重复添加元素
 				addon_meta.support_difficults.append(find_index) #将当前获得的索引添加到元数据
-		result.addons_names.append()
+		result.addons.append(addon_meta)
 	return result
 
 ## 游戏状态报告
@@ -156,10 +156,12 @@ class GameStateReport extends RefCounted:
 class PackMetaReport extends RefCounted:
 	## 难度名称表，其索引与pack_access.pack_meta.difficults_list一一对应
 	var difficults_names: PackedStringArray
+	## 难度路径表，其索引与pack_access.pack_meta.difficults_list一一对应
+	var difficults_pathes: PackedStringArray
 	## 模组数量(pack.json中注册的数量，而非模组目录中的数量)
 	var mods_count: int
 	## 附属包表，其索引与pack_access.pack_meta.addons_list一一对应
-	var addons: BaiChuanInstaller.PackMetaReport_AddonsMeta
+	var addons: Array[BaiChuanInstaller.PackMetaReport_AddonsMeta]
 	## 版本号
 	var version: int
 	## 版本名称

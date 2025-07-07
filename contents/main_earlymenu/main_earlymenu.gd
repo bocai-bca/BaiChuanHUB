@@ -181,7 +181,7 @@ func load_install_pack() -> void:
 		refresh_log() #刷新日志
 		return
 	is_pack_load_success = true
-	n_mod_pack_tip_text.text = "安装包就绪: 版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons_names.size()) + "个附属包"
+	n_mod_pack_tip_text.text = "安装包就绪: 版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
 	n_mod_pack_tip_text.modulate = Color.GREEN
 	refresh_log() #刷新日志
 
@@ -208,10 +208,11 @@ func place_install_option_nodes() -> void:
 		)
 		install_option_difficults_nodes.append(new_check_box)
 		n_operation_install_option_difficults_container.add_child(new_check_box)
-	for i in meta_report.addons.addons_names.size(): #按索引遍历所有附属包名称
+	for i in meta_report.addons.size(): #按索引遍历所有附属包名称
 		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate()
-		new_check_box.text = meta_report.addons_names[i]
+		new_check_box.text = meta_report.addons[i].name
 		new_check_box.addon_index = i
+		new_check_box.support_difficults = meta_report.addons[i].support_difficults
 		new_check_box.pressed.connect(
 			func() -> void:
 				if (new_check_box.button_pressed): #如果按钮处于按下状态(正被勾选)
