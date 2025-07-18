@@ -129,6 +129,31 @@ func load_new_pack(pack_path: String) -> PackMetaReport:
 		result.addons.append(addon_meta)
 	return result
 
+## 安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，并返回成功与否
+func install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> bool:
+	logger.log_info("开始安装")
+	var dir_access: DirAccess = DirAccess.open(absolute_path) #打开安装目录为DirAccess
+	if (dir_access == null): #如果为null，说明出错
+		logger.log_error("打开目录失败：" + absolute_path)
+		logger.log_error("安装过程出现问题而中止")
+		return false
+	## 00数据检查
+	if (not (0 <= install_difficult and install_difficult < pack_access.pack_meta.difficults_list.size())): #如果给定的安装难度索引不在有效范围内
+		logger.log_error("不存在指定的安装难度索引：" + str(install_difficult))
+		logger.log_error("安装过程出现问题而中止")
+		return false
+	for install_addon in install_addons: #遍历所有
+		if (0 <= install_addon and install_addon < pack_access.pack_meta.addons_list.size()): #如果存在给定索引
+			continue
+		logger.log_error("不存在指定的安装附属包索引：" + str(install_addon))
+		logger.log_error("安装过程出现问题而中止")
+		return false
+	## /00 从此处起可确保传入的安装路径可访问、难度索引可用、附属包索引可用
+	## 01按顺序进行安装脚本
+	var difficult_commands: BaiChuanInstaller_ScriptHandler.ScriptParsed
+	## /01
+	return true
+
 ## 游戏状态报告
 class GameStateReport extends RefCounted:
 	enum GameVersionVerify{
