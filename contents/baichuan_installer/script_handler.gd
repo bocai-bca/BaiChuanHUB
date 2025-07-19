@@ -4,22 +4,26 @@ class_name BaiChuanInstaller_ScriptHandler
 
 ## 上一次方法调用是否包含错误
 var was_last_operation_error: bool = false
+## 安装路径，需要在执行run_command()方法前由安装器赋予值，否则会发生异常
+var install_path: String
 
 ## 解析脚本的高级封装，给定一个指向脚本文件的绝对路径，返回一个ScriptParsed，或者发生错误(包括命令格式、语法错误或引用了不存在的资源)时返回null，自身不影响was_last_operation_error
 func parse_script(absolute_path: String, pack_access: BaiChuanInstaller_PackAccess, logger: BaiChuanInstaller_Logger) -> ScriptParsed:
 	if (not FileAccess.file_exists(absolute_path)): #如果路径指不到文件
-		logger.log_error("未找到脚本：" + absolute_path)
+		logger.log_error("ScriptHandler: 未找到脚本：" + absolute_path)
 		return null
 	var commands_splitted: Array[PackedStringArray] = split_script(FileAccess.get_file_as_string(absolute_path), logger)
 	if (was_last_operation_error): #如果分段脚本时出现错误
-		logger.log_error("脚本分段因错误中止，路径：" + absolute_path)
+		logger.log_error("ScriptHandler: 脚本解析因分段出错中止，路径：" + absolute_path)
 		return null
 	var was_command_error: bool = false
 	for command_splitted in commands_splitted: #遍历所有已分段命令
 		if (not is_command_executable(command_splitted, pack_access)): #如果该命令不可执行
 			was_command_error = true
-			logger.log_error("命令检查出错，该行命令完整分段：" + str(command_splitted))
-
+			logger.log_error("ScriptHandler: 命令检查出错，该行命令完整分段：" + str(command_splitted))
+	if (was_command_error): #如果有命令检查出错
+		logger.log_error("ScriptHandler: 脚本解析因检查出错中止，路径：" + absolute_path)
+		return null
 	return ScriptParsed.new(commands_splitted)
 
 ## 分段脚本，同时检查命令格式，返回一个容纳了分段后命令的数组。如果出错was_last_operation_error会变为true，届时该方法返回的输出请勿信任
@@ -31,7 +35,7 @@ func split_script(script_content: String, logger: BaiChuanInstaller_Logger) -> A
 		var splitted: PackedStringArray = CommandSplitter.split(command, logger) #获取一个已分段数组，如果为空数组代表出错
 		if (splitted.is_empty()): #如果数组为空，意味着分段时出错
 			was_last_operation_error = true
-			logger.log_error("命令分段出错，该行命令完整内容：" + command)
+			logger.log_error("ScriptHandler: 命令分段出错，该行命令完整内容：" + command)
 		result.append(splitted)
 	return result
 
@@ -39,44 +43,61 @@ func split_script(script_content: String, logger: BaiChuanInstaller_Logger) -> A
 func is_command_executable(command_splitted: PackedStringArray, pack_access: BaiChuanInstaller_PackAccess) -> String:
 	if (command_splitted.is_empty()): #如果命令为空
 		was_last_operation_error = true
-		return "不允许空行命令"
+		return "ScriptHandler: 不允许空行命令"
 	match (command_splitted[0]): #匹配首项
 		"q", "b": #qmods和bepinex，用于将模组添加到游戏特定位置
 			if (command_splitted.size() < 2): #如果命令分段数不足
 				was_last_operation_error = true
-				return "命令缺少参数"
+				return "ScriptHandler: 命令缺少参数"
 			var ref_name: String = command_splitted[1]
 			for mod in pack_access.pack_meta.mods_list: #遍历模组列表
 				if (ref_name == mod.name): #如果名称匹配上了
 					was_last_operation_error = false
-					return "命令可安全执行"
+					return "ScriptHandler: 命令可安全执行"
 			was_last_operation_error = true
-			return "命令引用了不存在的模组引用名"
+			return "ScriptHandler: 命令引用了不存在的模组引用名"
 		"d", "c": #delete和clear，用于删除文件/目录或清空目录
 			if (command_splitted.size() < 2): #如果命令分段数不足
 				was_last_operation_error = true
-				return "命令缺少参数"
+				return "ScriptHandler: 命令缺少参数"
 		"cf", "cd": #copyfile和copydir，用于复制文件或目录
 			if (command_splitted.size() < 4): #如果命令分段数不足
 				was_last_operation_error = true
-				return "命令缺少参数"
+				return "ScriptHandler: 命令缺少参数"
 			match (command_splitted[1]): #匹配第二段
 				"p":
 					if (not (FileAccess.file_exists(pack_access.dir_access.get_current_dir().path_join(command_splitted[2])) or pack_access.dir_access.dir_exists(command_splitted[2]))): #如果不存在指定的文件或目录
 						was_last_operation_error = true
-						return "命令引用的包内路径不存在"
+						return "ScriptHandler: 命令引用的包内路径不存在"
 					was_last_operation_error = false
-					return "命令可安全执行"
+					return "ScriptHandler: 命令可安全执行"
 				"g":
 					was_last_operation_error = false
-					return "命令可安全执行"
+					return "ScriptHandler: 命令可安全执行"
 			was_last_operation_error = true
-			return "命令使用了不存在的子命令"
+			return "ScriptHandler: 命令使用了不存在的子命令"
 	was_last_operation_error = true
-	return "无效命令"
+	return "ScriptHandler: 无效命令"
 
-## 执行命令
-func run_command(command_splitted: PackedStringArray, logger: BaiChuanInstaller_Logger) -> bool:
+## 执行命令，传入命令、上下文附属包索引(如果在附属包内)，并返回成功与否
+func run_command(command_splitted: PackedStringArray, addon_index: int, pack_access: BaiChuanInstaller_PackAccess, logger: BaiChuanInstaller_Logger) -> bool:
+	if (command_splitted.is_empty()): #如果命令为空
+		logger.log_error("ScriptHandler: 不允许空行命令")
+		return false
+	match (command_splitted[0]): #匹配首项
+		"q": #qmods，用于将模组添加到QMods
+			var mod_path: String = pack_access.get_mod_absolute_path(command_splitted[1])
+			if (mod_path.is_empty() and addon_index != -1):
+				mod_path = pack_access.get_addon_mod_absolute_path(addon_index, command_splitted[1])
+			if (mod_path.is_empty()):
+				logger.log_error("ScriptHandler: 无效模组引用名：" + command_splitted[1])
+				return false
+			if (not DirAccess.dir_exists_absolute(mod_path)):
+				logger.log_error("ScriptHandler: 未找到引用名为\"" + command_splitted[1] + "\"的模组：" + mod_path)
+				return false
+			BaiChuanInstaller_FileCopier.copy_recursive(mod_path, install_path.path_join("QMods"), logger)
+		"b": #bepinex，用于将模组添加到BepInEx
+			pass
 	return true
 
 ## 已解析的脚本，定义本类是用来其他部分代码强类型化的
@@ -106,14 +127,14 @@ class CommandSplitter extends Object:
 					if (is_offset_part_bound(command, current_at, 1)): #如果右侧是边界
 						is_in_quotation = false #标记当前处于引号外
 					else: #否则(右侧不是边界，这就不对了)
-						logger.log_error("分段命令时发现问题，在退出引号时发现右侧紧跟其他内容")
+						logger.log_error("ScriptHandler: 分段命令时发现问题，在退出引号时发现右侧紧跟其他内容")
 						return []
 				else: #否则(当前状态在引号外)
 					## 此处为进入引号
 					if (is_offset_part_bound(command, current_at, -1)): #如果左侧是边界
 						is_in_quotation = true #标记当前处于引号内
 					else: #否则(左侧不是边界，这就不对了)
-						logger.log_error("分段命令时发现问题，在非分段处发现了进入引号")
+						logger.log_error("ScriptHandler: 分段命令时发现问题，在非分段处发现了进入引号")
 						return []
 			elif (command[current_at] == SPACE): #否则如果当前字符为空格
 				if (is_in_quotation): #如果当前字符处于引号内

@@ -34,11 +34,11 @@ var scripts_parsed: Dictionary[String, BaiChuanInstaller_ScriptHandler.ScriptPar
 func open_new(pack_path: String, logger: BaiChuanInstaller_Logger) -> bool:
 	dir_access = DirAccess.create_temp("BaiChuanHUB") #新建临时目录
 	if (dir_access == null): #如果返回为null，说明出错了
-		logger.log_error("在创建新临时目录时发生错误，加载安装包将中止")
+		logger.log_error("PackAccess: 在创建新临时目录时发生错误，加载安装包将中止")
 		return false
 	var zip_reader: ZIPReader = ZIPReader.new() #新建一个压缩包读取实例
 	if (zip_reader.open(pack_path) != OK): #如果打开压缩包发生了错误
-		logger.log_error("在打开压缩包时发生错误，加载安装包将中止")
+		logger.log_error("PackAccess: 在打开压缩包时发生错误，加载安装包将中止")
 		return false
 	var pathes: PackedStringArray = zip_reader.get_files()
 	for path in pathes: #遍历压缩包中的所有项
@@ -54,15 +54,15 @@ func open_new(pack_path: String, logger: BaiChuanInstaller_Logger) -> bool:
 func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 	## 00基本解析
 	if (not dir_access.file_exists(ROOT_PACK_META)): #如果压缩包内找不到pack.json
-		logger.log_error("找不到包元数据，解析将中止")
+		logger.log_error("PackAccess: 找不到包元数据，解析将中止")
 		return false
 	pack_meta = PackMeta.new() #新建PackMeta实例
 	var parsed: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir_access.get_current_dir().path_join(ROOT_PACK_META))) as Dictionary #尝试解析pack.json
 	if (parsed == null): #json解析失败时会返回null
-		logger.log_error("包元数据JSON解析失败，解析将中止")
+		logger.log_error("PackAccess: 包元数据JSON解析失败，解析将中止")
 		return false
 	if (not (parsed.has("version") and parsed.has("version_name") and parsed.has("fork_version") and parsed.has("difficults") and parsed.has("mods") and parsed.has("addons"))):
-		logger.log_error("包元数据不完整，解析将中止")
+		logger.log_error("PackAccess: 包元数据不完整，解析将中止")
 		return false
 	## /00
 	## 01元数据反序列化
@@ -74,19 +74,19 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 		if (difficult_object.has("path") and difficult_object.has("name")):
 			pack_meta.difficults_list.append(PathNameObject.new(difficult_object["path"], difficult_object["name"]))
 			continue
-		logger.log_error("解析元数据时发现问题，难度列表有必要键丢失，解析将中止")
+		logger.log_error("PackAccess: 解析元数据时发现问题，难度列表有必要键丢失，解析将中止")
 		return false
 	for mod_object in parsed["mods"] as Array[Dictionary]:
 		if (mod_object.has("path") and mod_object.has("name") and mod_object.has("hash_list")):
 			var mod_registry_object: ModRegistryObject = ModRegistryObject.new(mod_object["path"], mod_object["name"])
 			for hash_list_obj in mod_object["hash_list"] as Array[Dictionary]: #遍历每个哈希验证表中的字典
 				if (not hash_list_obj.has("path") and hash_list_obj.has("md5")):
-					logger.log_error("解析元数据时发现问题，模组哈希验证表缺少必要键，解析将中止")
+					logger.log_error("PackAccess: 解析元数据时发现问题，模组哈希验证表缺少必要键，解析将中止")
 					return false
 				mod_registry_object.hash_list.append(HashListObject.new(hash_list_obj["path"], hash_list_obj["md5"]))
 			pack_meta.mods_list.append(mod_registry_object)
 			continue
-		logger.log_error("解析元数据时发现问题，模组列表有必要键丢失，解析将中止")
+		logger.log_error("PackAccess: 解析元数据时发现问题，模组列表有必要键丢失，解析将中止")
 		return false
 	for addon_object in parsed["addons"] as Array[Dictionary]:
 		if (addon_object.has("path") and addon_object.has("name")):
@@ -94,31 +94,31 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 			var addon_name: String = addon_object["name"]
 			var addon_registry_object: AddonRegistryObject = AddonRegistryObject.new(addon_path, addon_name)
 			if (not dir_access.file_exists(ADDONS_DIR.path_join(addon_path).path_join(ADDON_META))): #如果不存在安装包元数据
-				logger.log_error("解析元数据时发现问题，附属包\"" + addon_name + "\"(" + addon_path + ")缺少元数据文件，解析将中止")
+				logger.log_error("PackAccess: 解析元数据时发现问题，附属包\"" + addon_name + "\"(" + addon_path + ")缺少元数据文件，解析将中止")
 				return false
 			var parsed_addon: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(addon_path).path_join(ADDON_META))) as Dictionary #尝试解析addon.json
 			if (parsed_addon == null): #如果解析失败
-				logger.log_error("附属包\"" + addon_name + "\"(" + addon_path + ")元数据解析失败，解析将中止")
+				logger.log_error("PackAccess: 附属包\"" + addon_name + "\"(" + addon_path + ")元数据解析失败，解析将中止")
 				return false
 			if (not parsed_addon.has("mods")):
-				logger.log_error("附属包\"" + addon_name + "\"(" + addon_path + ")元数据不完整，解析将中止")
+				logger.log_error("PackAccess: 附属包\"" + addon_name + "\"(" + addon_path + ")元数据不完整，解析将中止")
 				return false
 			for addon_mod in parsed_addon["mods"] as Array[Dictionary]:
 				if (addon_mod.has("path") and addon_mod.has("name") and addon_mod.has("hash_list")):
 					var mod_registry_object: ModRegistryObject = ModRegistryObject.new(addon_mod["path"], addon_mod["name"])
 					for hash_list_obj in addon_mod["hash_list"] as Array[Dictionary]: #遍历每个哈希验证表中的字典
 						if (not hash_list_obj.has("path") and hash_list_obj.has("md5")):
-							logger.log_error("解析附属包\"" + addon_name + "\"(" + addon_path + ")元数据时发现问题，模组哈希验证表缺少必要键，解析将中止")
+							logger.log_error("PackAccess: 解析附属包\"" + addon_name + "\"(" + addon_path + ")元数据时发现问题，模组哈希验证表缺少必要键，解析将中止")
 							return false
 						mod_registry_object.hash_list.append(HashListObject.new(hash_list_obj["path"], hash_list_obj["md5"]))
 					addon_registry_object.mods.append(mod_registry_object)
 					continue
-				logger.log_error("解析附属包\"" + addon_name + "\"(" + addon_path + ")元数据时发现问题，模组列表有必要键丢失，解析将中止")
+				logger.log_error("PackAccess: 解析附属包\"" + addon_name + "\"(" + addon_path + ")元数据时发现问题，模组列表有必要键丢失，解析将中止")
 				return false
 			addon_registry_object.support_difficults = dir_access.get_directories_at(dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(addon_path).path_join(DIFFICULTS_DIR)) #获取该附属包的所有难度
 			pack_meta.addons_list.append(addon_registry_object)
 			continue
-		logger.log_error("解析元数据时发现问题，附属包列表有必要键丢失，解析将中止")
+		logger.log_error("PackAccess: 解析元数据时发现问题，附属包列表有必要键丢失，解析将中止")
 		return false
 	## /01
 	return true
@@ -130,11 +130,11 @@ func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
 	var result: bool = true
 	for difficult in pack_meta.difficults_list: #遍历所有难度
 		if (not dir_access.dir_exists(DIFFICULTS_DIR.path_join(difficult.path))): #如果不存在指定的难度目录
-			logger.log_error("解析安装包时发现问题，安装包缺少难度\"" + difficult.name + "\"，注册路径：" + difficult.path)
+			logger.log_error("PackAccess: 解析安装包时发现问题，安装包缺少难度\"" + difficult.name + "\"，注册路径：" + difficult.path)
 			result = false
 			continue
 		if (not dir_access.file_exists(DIFFICULTS_DIR.path_join(difficult.path).path_join(INSTALL_SCRIPT_NAME))): #如果不存在安装脚本
-			logger.log_error("解析安装包时发现问题，难度\"" + difficult.name + "\"缺少安装脚本")
+			logger.log_error("PackAccess: 解析安装包时发现问题，难度\"" + difficult.name + "\"缺少安装脚本")
 			result = false
 		else: #否则(存在安装脚本)
 			var script_path: String = DIFFICULTS_DIR.path_join(difficult.path).path_join(INSTALL_SCRIPT_NAME)
@@ -142,10 +142,10 @@ func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
 			if (not script_handler.was_last_operation_error): #如果没报错
 				scripts_parsed[script_path] = BaiChuanInstaller_ScriptHandler.ScriptParsed.new(script_splitted)
 			else: #否则(有报错)
-				logger.log_error("安装脚本\"" + script_path + "\"分段时出错")
+				logger.log_error("PackAccess: 安装脚本\"" + script_path + "\"分段时出错")
 				result = false
 		if (not dir_access.file_exists(DIFFICULTS_DIR.path_join(difficult.path).path_join(UNINSTALL_SCRIPT_NAME))): #如果不存在卸载脚本
-			logger.log_error("解析安装包时发现问题，难度\"" + difficult.name + "\"缺少卸载脚本")
+			logger.log_error("PackAccess: 解析安装包时发现问题，难度\"" + difficult.name + "\"缺少卸载脚本")
 			result = false
 		else: #否则(存在卸载脚本)
 			var script_path: String = DIFFICULTS_DIR.path_join(difficult.path).path_join(UNINSTALL_SCRIPT_NAME)
@@ -153,58 +153,103 @@ func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
 			if (not script_handler.was_last_operation_error): #如果没报错
 				scripts_parsed[script_path] = BaiChuanInstaller_ScriptHandler.ScriptParsed.new(script_splitted)
 			else: #否则(有报错)
-				logger.log_error("卸载脚本\"" + script_path + "\"分段时出错")
+				logger.log_error("PackAccess: 卸载脚本\"" + script_path + "\"分段时出错")
 				result = false
 	for mod in pack_meta.mods_list: #遍历所有模组
 		if (not dir_access.dir_exists(MODS_DIR.path_join(mod.path))): #如果不存在指定的模组目录
-			logger.log_error("解析安装包时发现问题，安装包缺少模组\"" + mod.name + "\"，注册路径：" + mod.path)
+			logger.log_error("PackAccess: 解析安装包时发现问题，安装包缺少模组\"" + mod.name + "\"，注册路径：" + mod.path)
 			result = false
 			continue
 		for hash_obj in mod.hash_list: #遍历该模组的哈希验证表
 			var combined_path: String = MODS_DIR.path_join(mod.path).path_join(hash_obj.path) #制作一个合并后的路径
 			if (not dir_access.file_exists(combined_path)): #如果不存在该哈希验证对象指定的文件
-				logger.log_error("解析安装包时发现问题，模组\"" + mod.name + "\"缺少注册的哈希验证文件\"" + hash_obj.path + "\"")
+				logger.log_error("PackAccess: 解析安装包时发现问题，模组\"" + mod.name + "\"缺少注册的哈希验证文件\"" + hash_obj.path + "\"")
 				result = false
 				continue
 			var current_md5: String = FileAccess.get_md5(dir_access.get_current_dir().path_join(combined_path)) #获取指向文件的md5
 			if (current_md5 != hash_obj.md5.to_lower()): #如果获取的MD5与哈希验证表注册的MD5不同
-				logger.log_error("解析安装包时发现问题，模组\"" + mod.name + "\"的哈希验证文件\"" + hash_obj.path + "\"取得了与注册值不同的MD5值。当前" + current_md5 + "，注册值" + hash_obj.md5)
+				logger.log_error("PackAccess: 解析安装包时发现问题，模组\"" + mod.name + "\"的哈希验证文件\"" + hash_obj.path + "\"取得了与注册值不同的MD5值。当前" + current_md5 + "，注册值" + hash_obj.md5)
 				result = false
 				continue
 	for addon in pack_meta.addons_list: #遍历所有附属包
 		var addon_path: String = ADDONS_DIR.path_join(addon.path) #该附属包的路径，相对于安装包根目录
 		if (not dir_access.dir_exists(addon_path)): #如果不存在指定的附属包目录
-			logger.log_error("解析安装包时发现问题，找不到附属包\"" + addon.name + "\"，注册路径：" + addon.path)
+			logger.log_error("PackAccess: 解析安装包时发现问题，找不到附属包\"" + addon.name + "\"，注册路径：" + addon.path)
 			result = false
 			continue
 		if (not dir_access.file_exists(addon_path.path_join(ADDON_META))): #如果不存在附属包元数据
-			logger.log_error("解析安装包时发现问题，附属包\"" + addon.name + "\"缺少元数据")
+			logger.log_error("PackAccess: 解析安装包时发现问题，附属包\"" + addon.name + "\"缺少元数据")
 			result = false
 			continue
 		for addon_mod in addon.mods: #遍历该附属包的所有模组
 			var this_mod_combined_path: String = addon_path.path_join(MODS_DIR).path_join(addon_mod.path) #合并一个当前模组相对于安装包根目录的路径
 			if (not dir_access.dir_exists(this_mod_combined_path)): #如果不存在指定的模组目录
-				logger.log_error("解析安装包时发现问题，附属包\"" + addon.name + "\"缺少模组\"" + addon_mod.name + "\"，注册路径：" + addon_mod.path)
+				logger.log_error("PackAccess: 解析安装包时发现问题，附属包\"" + addon.name + "\"缺少模组\"" + addon_mod.name + "\"，注册路径：" + addon_mod.path)
 				result = false
 				continue
 			for hash_obj in addon_mod.hash_list: #遍历该附属包中的该模组的哈希验证表
 				var path_of_the_file_of_hash_obj: String = this_mod_combined_path.path_join(hash_obj.path) #合并一个当前哈希验证文件相对于安装包根目录的路径
 				if (not dir_access.file_exists(path_of_the_file_of_hash_obj)): #如果该文件不存在
-					logger.log_error("解析安装包时发现问题，附属包\"" + addon.name + "\"的模组\"" + addon_mod.name + "\"缺少注册的哈希验证文件\"" + hash_obj.path + "\"")
+					logger.log_error("PackAccess: 解析安装包时发现问题，附属包\"" + addon.name + "\"的模组\"" + addon_mod.name + "\"缺少注册的哈希验证文件\"" + hash_obj.path + "\"")
 					result = false
 					continue
 				var current_md5: String = FileAccess.get_md5(dir_access.get_current_dir().path_join(path_of_the_file_of_hash_obj)) #获取指向文件的md5
 				if (current_md5 != hash_obj.md5.to_lower()): #如果获取的MD5与哈希验证表注册的MD5不同
-					logger.log_error("解析安装包时发现问题，附属包\"" + addon.name + "\"的模组\"" + addon_mod.name + "\"的哈希验证文件\"" + hash_obj.path + "\"取得了与注册值不同的MD5值。当前" + current_md5 + "，注册值" + hash_obj.md5)
+					logger.log_error("PackAccess: 解析安装包时发现问题，附属包\"" + addon.name + "\"的模组\"" + addon_mod.name + "\"的哈希验证文件\"" + hash_obj.path + "\"取得了与注册值不同的MD5值。当前" + current_md5 + "，注册值" + hash_obj.md5)
 					result = false
 		for addon_difficult in addon.support_difficults: #遍历该附属包的所有难度
 			if (not dir_access.file_exists(addon_path.path_join(DIFFICULTS_DIR).path_join(addon_difficult).path_join(INSTALL_SCRIPT_NAME))): #如果不存在安装脚本
-				logger.log_error("解析安装包时发现问题，附属包\"" + addon.name + "\"的难度\"" + addon_difficult + "\"(标识符)缺少安装脚本")
+				logger.log_error("PackAccess: 解析安装包时发现问题，附属包\"" + addon.name + "\"的难度\"" + addon_difficult + "\"(标识符)缺少安装脚本")
 				result = false
 			if (not dir_access.file_exists(addon_path.path_join(DIFFICULTS_DIR).path_join(addon_difficult).path_join(UNINSTALL_SCRIPT_NAME))): #如果不存在卸载脚本
-				logger.log_error("解析安装包时发现问题，附属包\"" + addon.name + "\"的难度\"" + addon_difficult + "\"(标识符)缺少卸载脚本")
+				logger.log_error("PackAccess: 解析安装包时发现问题，附属包\"" + addon.name + "\"的难度\"" + addon_difficult + "\"(标识符)缺少卸载脚本")
 				result = false
 	return result
+
+## 传入难度索引，返回该难度的安装脚本的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+func get_install_script_absolute_path(difficult_index: int) -> String:
+	if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的索引有效
+		return dir_access.get_current_dir().path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
+	return ""
+
+## 传入难度索引，返回该难度的卸载脚本的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+func get_uninstall_script_absolute_path(difficult_index: int) -> String:
+	if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的索引有效
+		return dir_access.get_current_dir().path_join(pack_meta.difficults_list[difficult_index].path).path_join(UNINSTALL_SCRIPT_NAME)
+	return ""
+
+## 传入附属包索引和难度索引，返回该附属包的该难度的安装脚本的绝对路径，索引为-1时返回通配难度。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+func get_addon_install_script_absolute_path(addon_index: int, difficult_index: int) -> String:
+	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
+		if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的难度索引有效
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
+		elif (difficult_index == -1): #否则如果给定的难度索引为-1(代表通配难度)
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join("_").path_join(INSTALL_SCRIPT_NAME)
+	return ""
+
+## 传入附属包索引和难度索引，返回该附属包的该难度的卸载脚本的绝对路径，索引为-1时返回通配难度。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+func get_addon_uninstall_script_absolute_path(addon_index: int, difficult_index: int) -> String:
+	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
+		if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的难度索引有效
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(pack_meta.difficults_list[difficult_index].path).path_join(UNINSTALL_SCRIPT_NAME)
+		elif (difficult_index == -1): #否则如果给定的难度索引为-1(代表通配难度)
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join("_").path_join(UNINSTALL_SCRIPT_NAME)
+	return ""
+
+## 传入模组访问标识名，返回该模组的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+func get_mod_absolute_path(access_name: String) -> String:
+	for mod_object in pack_meta.mods_list: #遍历所有模组注册项
+		if (mod_object.name == access_name):
+			return dir_access.get_current_dir().path_join(MODS_DIR).path_join(mod_object.path)
+	return ""
+
+## 传入附属包索引和模组访问标识名，返回该附属包中该模组的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+func get_addon_mod_absolute_path(addon_index: int, access_name: String) -> String:
+	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
+		for mod_object in pack_meta.addons_list[addon_index].mods: #遍历所有模组注册项
+			if (mod_object.name == access_name):
+				return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(MODS_DIR).path_join(mod_object.path)
+	return ""
 
 ## 包元数据，其实差不多是把pack.json反序列化成类型数据
 class PackMeta extends RefCounted:

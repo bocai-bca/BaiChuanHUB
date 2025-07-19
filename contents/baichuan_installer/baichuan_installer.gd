@@ -17,6 +17,8 @@ var log_string: String:
 var game_searcher: BaiChuanInstaller_GameSearcher = BaiChuanInstaller_GameSearcher.new()
 ## 安装包访问实例
 var pack_access: BaiChuanInstaller_PackAccess = BaiChuanInstaller_PackAccess.new()
+## 脚本处理器
+var script_handler: BaiChuanInstaller_ScriptHandler = BaiChuanInstaller_ScriptHandler.new()
 
 ## 搜寻游戏的高级封装，将返回一个md5匹配的绝对路径，如果寻找不到md5匹配的路径但至少找到了文件存在的路径，就返回一个该条件的路径
 func search_game() -> String:
@@ -142,7 +144,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		logger.log_error("不存在指定的安装难度索引：" + str(install_difficult))
 		logger.log_error("安装过程出现问题而中止")
 		return false
-	for install_addon in install_addons: #遍历所有
+	for install_addon in install_addons: #遍历所有附属包索引
 		if (0 <= install_addon and install_addon < pack_access.pack_meta.addons_list.size()): #如果存在给定索引
 			continue
 		logger.log_error("不存在指定的安装附属包索引：" + str(install_addon))
@@ -150,7 +152,39 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		return false
 	## /00 从此处起可确保传入的安装路径可访问、难度索引可用、附属包索引可用
 	## 01按顺序进行安装脚本
-	var difficult_commands: BaiChuanInstaller_ScriptHandler.ScriptParsed
+	var difficult_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(pack_access.get_install_script_absolute_path(install_difficult), pack_access, logger)
+	var addons_scripts: Array[BaiChuanInstaller_ScriptHandler.ScriptParsed] = []
+	for install_addon in install_addons: #遍历所有附属包索引
+		if (pack_access.pack_meta.addons_list[install_addon].support_difficults.has("_")):
+			addons_scripts.append(script_handler.parse_script(pack_access.get_addon_install_script_absolute_path(install_addon, -1), pack_access, logger))
+		addons_scripts.append(script_handler.parse_script(pack_access.get_addon_install_script_absolute_path(install_addon, install_difficult), pack_access, logger))
+	##  02执行难度安装脚本
+	logger.log_info("正在执行难度安装脚本")
+	for command_index in difficult_script.commands_splitted.size(): #遍历难度安装脚本的命令
+		if (script_handler.run_command(difficult_script.commands_splitted[command_index], -1, pack_access, logger)): #执行命令并检查是否成功
+			logger.log_error("难度安装脚本执行过程出现问题，发生于：" + str(command_index))
+			return false
+	##  /02
+	##  03执行附属包安装脚本
+	for addon_index in addons_scripts.size(): #遍历所有安装包脚本
+		logger.log_info("正在执行附属包安装脚本：" + str(addon_index))
+		for command_index in addons_scripts[addon_index].commands_splitted.size(): #遍历当前附属包安装脚本的命令
+			if (script_handler.run_command(addons_scripts[addon_index].commands_splitted[command_index], pack_access,logger)): #执行命令并检查是否成功
+				logger.log_error("附属包安装脚本执行过程出现问题，发生于：" + str(command_index))
+				return false
+	##  /03
+	## 04制作卸载脚本
+	logger.log_info("正在制作卸载脚本")
+	var uninstall_script_content: String = ""
+	for addon_index in install_addons.size(): #按索引遍历所有待安装附属包
+		var i: int = install_addons.size() - 1 - addon_index #反转索引
+		if (pack_access.pack_meta.addons_list[install_addons[i]].support_difficults.has("_")):
+			uninstall_script_content += FileAccess.get_file_as_string(pack_access.get_addon_uninstall_script_absolute_path(install_addons[i], -1))
+		uninstall_script_content += FileAccess.get_file_as_string(pack_access.get_addon_uninstall_script_absolute_path(install_addons[i], install_difficult))
+	uninstall_script_content += FileAccess.get_file_as_string(pack_access.get_uninstall_script_absolute_path(install_difficult))
+	var uninstall_script_file: FileAccess = FileAccess.open(absolute_path.path_join(pack_access.UNINSTALL_SCRIPT_NAME), FileAccess.WRITE)
+	uninstall_script_file.store_string(uninstall_script_content)
+	## /04
 	## /01
 	return true
 
