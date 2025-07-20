@@ -95,10 +95,66 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 			if (not DirAccess.dir_exists_absolute(mod_path)):
 				logger.log_error("ScriptHandler: 未找到引用名为\"" + command_splitted[1] + "\"的模组：" + mod_path)
 				return false
-			BaiChuanInstaller_FileCopier.copy_recursive(mod_path, install_path.path_join("QMods"), logger)
+			return BaiChuanInstaller_DirRecurs.copy_recursive(mod_path, install_path.path_join("QMods"), logger)
 		"b": #bepinex，用于将模组添加到BepInEx
-			pass
-	return true
+			var mod_path: String = pack_access.get_mod_absolute_path(command_splitted[1])
+			if (mod_path.is_empty() and addon_index != -1):
+				mod_path = pack_access.get_addon_mod_absolute_path(addon_index, command_splitted[1])
+			if (mod_path.is_empty()):
+				logger.log_error("ScriptHandler: 无效模组引用名：" + command_splitted[1])
+				return false
+			if (not DirAccess.dir_exists_absolute(mod_path)):
+				logger.log_error("ScriptHandler: 未找到引用名为\"" + command_splitted[1] + "\"的模组：" + mod_path)
+				return false
+			return BaiChuanInstaller_DirRecurs.copy_recursive(mod_path, install_path.path_join("BepInEx/plugins"), logger)
+		"d": #delete，用于删除游戏中的目录或文件
+			var path: String = install_path.path_join(command_splitted[1])
+			if (FileAccess.file_exists(path) or DirAccess.dir_exists_absolute(path)):
+				DirAccess.remove_absolute(path)
+			else:
+				logger.log_warn("ScriptHandler: 未找到待删除的文件或目录：" + path)
+				return false
+		"c": #clear，清空一个目录中的所有内容
+			var path: String = install_path.path_join(command_splitted[1])
+			if (DirAccess.dir_exists_absolute(path)):
+				return BaiChuanInstaller_DirRecurs.clear_recursive(path, logger)
+		"cf": #copyfile，复制文件到游戏中特定位置
+			var source_path: String
+			var target_path: String
+			match (command_splitted[1]):
+				"p": #从包内
+					source_path = pack_access.dir_access.get_current_dir().path_join(command_splitted[2])
+					target_path = install_path.path_join(command_splitted[3])
+				"g": #从游戏内
+					source_path = install_path.path_join(command_splitted[2])
+					target_path = install_path.path_join(command_splitted[3])
+				_:
+					logger.log_error("ScriptHandler: 命令使用了不存在的子命令")
+					return false
+			if (FileAccess.file_exists(source_path)):
+				if (DirAccess.copy_absolute(source_path, target_path) != OK):
+					logger.log_error("ScriptHandler: 复制文件失败：\"" + source_path + "\" -> \"" + target_path + "\"")
+					return false
+			logger.log_error("ScriptHandler: 源文件不存在：" + source_path)
+		"cd": #copydir，复制目录到游戏中特定位置
+			var source_path: String
+			var target_path: String
+			match (command_splitted[1]):
+				"p": #从包内
+					source_path = pack_access.dir_access.get_current_dir().path_join(command_splitted[2])
+					target_path = install_path.path_join(command_splitted[3])
+				"g": #从游戏内
+					source_path = install_path.path_join(command_splitted[2])
+					target_path = install_path.path_join(command_splitted[3])
+				_:
+					logger.log_error("ScriptHandler: 命令使用了不存在的子命令")
+					return false
+			if (DirAccess.dir_exists_absolute(source_path)):
+				if (not BaiChuanInstaller_DirRecurs.copy_recursive(source_path, target_path, logger)):
+					logger.log_error("ScriptHandler: 复制目录时出错：\"" + source_path + "\" -> \"" + target_path + "\"")
+					return false
+			logger.log_error("ScriptHandler: 源目录不存在：" + source_path)
+	return false
 
 ## 已解析的脚本，定义本类是用来其他部分代码强类型化的
 class ScriptParsed extends RefCounted:

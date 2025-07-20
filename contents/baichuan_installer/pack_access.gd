@@ -209,31 +209,31 @@ func parse_contents(logger: BaiChuanInstaller_Logger) -> bool:
 ## 传入难度索引，返回该难度的安装脚本的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
 func get_install_script_absolute_path(difficult_index: int) -> String:
 	if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的索引有效
-		return dir_access.get_current_dir().path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
+		return dir_access.get_current_dir().path_join(DIFFICULTS_DIR).path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
 	return ""
 
 ## 传入难度索引，返回该难度的卸载脚本的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
 func get_uninstall_script_absolute_path(difficult_index: int) -> String:
 	if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的索引有效
-		return dir_access.get_current_dir().path_join(pack_meta.difficults_list[difficult_index].path).path_join(UNINSTALL_SCRIPT_NAME)
+		return dir_access.get_current_dir().path_join(DIFFICULTS_DIR).path_join(pack_meta.difficults_list[difficult_index].path).path_join(UNINSTALL_SCRIPT_NAME)
 	return ""
 
 ## 传入附属包索引和难度索引，返回该附属包的该难度的安装脚本的绝对路径，索引为-1时返回通配难度。当失败时返回空字符串，并在未加载安装包时执行会出现异常
 func get_addon_install_script_absolute_path(addon_index: int, difficult_index: int) -> String:
 	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
 		if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的难度索引有效
-			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
 		elif (difficult_index == -1): #否则如果给定的难度索引为-1(代表通配难度)
-			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join("_").path_join(INSTALL_SCRIPT_NAME)
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join("_").path_join(INSTALL_SCRIPT_NAME)
 	return ""
 
 ## 传入附属包索引和难度索引，返回该附属包的该难度的卸载脚本的绝对路径，索引为-1时返回通配难度。当失败时返回空字符串，并在未加载安装包时执行会出现异常
 func get_addon_uninstall_script_absolute_path(addon_index: int, difficult_index: int) -> String:
 	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
 		if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的难度索引有效
-			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(pack_meta.difficults_list[difficult_index].path).path_join(UNINSTALL_SCRIPT_NAME)
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join(pack_meta.difficults_list[difficult_index].path).path_join(UNINSTALL_SCRIPT_NAME)
 		elif (difficult_index == -1): #否则如果给定的难度索引为-1(代表通配难度)
-			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join("_").path_join(UNINSTALL_SCRIPT_NAME)
+			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join("_").path_join(UNINSTALL_SCRIPT_NAME)
 	return ""
 
 ## 传入模组访问标识名，返回该模组的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常

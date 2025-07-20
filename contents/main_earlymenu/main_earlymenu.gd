@@ -137,11 +137,15 @@ func refresh_game_info() -> void:
 		BaiChuanInstaller.GameStateReport.GameVersionVerify.VERIFY_SUCCESS: #如果验证结果为成功
 			text_version_verify = "[color=green]验证通过[/color]"
 	var text_bepinex_exist: String
-	match (game_state_report.is_bepinex_exist): #匹配状态报告的BepInEx存在迹象
-		true:
-			text_bepinex_exist = "[color=green]是[/color]"
-		false:
+	match (game_state_report.bepinex_installed): #匹配状态报告的BepInEx存在迹象
+		BaiChuanInstaller.GameStateReport.BepInExInstalled.ERROR: #如果发生错误
+			text_bepinex_exist = "[color=red]发生错误[/color]"
+		BaiChuanInstaller.GameStateReport.BepInExInstalled.NO: #如果什么都不存在
 			text_bepinex_exist = "[color=red]否[/color]"
+		BaiChuanInstaller.GameStateReport.BepInExInstalled.HALF: #如果存在部分迹象
+			text_bepinex_exist = "[color=yellow]部分[/color]"
+		BaiChuanInstaller.GameStateReport.BepInExInstalled.FULL: #如果存在所有迹象
+			text_bepinex_exist = "[color=green]是[/color]"
 	var text_qmods_exist: String
 	match (game_state_report.is_qmods_exist): #匹配状态报告的QMods存在迹象
 		true:
@@ -306,7 +310,10 @@ func installer_install_reinstall_checkbox() -> void:
 
 ## 安装器/安装/确认安装
 func installer_install_confirm() -> void:
-	pass
+	if (install_option_difficult_current != -1):
+		installer.install(n_line_edit_game_location.text.get_base_dir(), install_option_difficult_current, install_option_addons_current, install_option_reinstall)
+	refresh_game_info()
+	refresh_log() #刷新日志
 
 ## 安装器/卸载/确认卸载
 func installer_uninstall_confirm() -> void:

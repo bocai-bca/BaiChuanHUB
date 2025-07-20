@@ -55,7 +55,7 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 	if (root_dir == null): #如果DirAccess打开失败
 		logger.log_error("DirAccess打开失败")
 		result.game_version_verify = GameStateReport.GameVersionVerify.ERROR
-		result.is_bepinex_exist = false
+		result.bepinex_installed = GameStateReport.BepInExInstalled.ERROR
 		result.is_qmods_exist = false
 		result.baichuan_installed = GameStateReport.BaiChuanInstalled.ERROR
 		return result
@@ -68,11 +68,24 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 	else: #否则(若md5验证不通过)
 		logger.log_warn("md5验证不通过")
 		result.game_version_verify = GameStateReport.GameVersionVerify.VERIFY_FAILED
-	result.is_bepinex_exist = root_dir.dir_exists("BepInEx/core")
+	var i: int = 0
+	if (root_dir.dir_exists("BepInEx")):
+		i += 1
+	if (root_dir.dir_exists("BepInEx/core")):
+		i += 1
+	if (root_dir.dir_exists("BepInEx/plugins")):
+		i += 1
+	match (i):
+		0:
+			result.bepinex_installed = GameStateReport.BepInExInstalled.NO
+		1, 2:
+			result.bepinex_installed = GameStateReport.BepInExInstalled.HALF
+		3:
+			result.bepinex_installed = GameStateReport.BepInExInstalled.FULL
 	result.is_qmods_exist = root_dir.dir_exists("QMods")
 	## 00百川安装状态检测
 	var files: PackedStringArray = root_dir.get_files()
-	var i: int = 0
+	i = 0
 	if (files.has("baichuan_install_data.json")): #如果存在安装标识信息
 		#logger.log_info("已找到百川安装标识文件")
 		i += 1
@@ -151,6 +164,8 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		logger.log_error("安装过程出现问题而中止")
 		return false
 	## /00 从此处起可确保传入的安装路径可访问、难度索引可用、附属包索引可用
+	logger.log_info("正在放置前置")
+	BaiChuanInstaller_DirRecurs.copy_recursive(pack_access.dir_access.get_current_dir().path_join(pack_access.FRAMEWORKS_DIR), absolute_path, logger)
 	## 01按顺序进行安装脚本
 	var difficult_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(pack_access.get_install_script_absolute_path(install_difficult), pack_access, logger)
 	var addons_scripts: Array[BaiChuanInstaller_ScriptHandler.ScriptParsed] = []
@@ -169,7 +184,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	for addon_index in addons_scripts.size(): #遍历所有安装包脚本
 		logger.log_info("正在执行附属包安装脚本：" + str(addon_index))
 		for command_index in addons_scripts[addon_index].commands_splitted.size(): #遍历当前附属包安装脚本的命令
-			if (script_handler.run_command(addons_scripts[addon_index].commands_splitted[command_index], pack_access,logger)): #执行命令并检查是否成功
+			if (script_handler.run_command(addons_scripts[addon_index].commands_splitted[command_index], addon_index, pack_access,logger)): #执行命令并检查是否成功
 				logger.log_error("附属包安装脚本执行过程出现问题，发生于：" + str(command_index))
 				return false
 	##  /03
@@ -186,6 +201,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	uninstall_script_file.store_string(uninstall_script_content)
 	## /04
 	## /01
+	logger.log_info("安装流程结束")
 	return true
 
 ## 游戏状态报告
@@ -196,6 +212,12 @@ class GameStateReport extends RefCounted:
 		VERIFY_FAILED, #验证不通过
 		VERIFY_SUCCESS, #验证通过
 	}
+	enum BepInExInstalled{
+		ERROR, #因各种原因错误，也充当一个占位符
+		NO, #没有找到BepInEx的迹象
+		HALF, #找到了部分迹象
+		FULL, #找到了所有迹象
+	}
 	enum BaiChuanInstalled{
 		ERROR, #因各种原因错误，也充当一个占位符
 		NO, #没有找到百川的安装标识符或卸载脚本
@@ -205,7 +227,7 @@ class GameStateReport extends RefCounted:
 	## 游戏版本验证
 	var game_version_verify: GameVersionVerify
 	## BepInEx存在迹象
-	var is_bepinex_exist: bool
+	var bepinex_installed: BepInExInstalled
 	## QMods存在迹象
 	var is_qmods_exist: bool
 	## 百川安装状况
