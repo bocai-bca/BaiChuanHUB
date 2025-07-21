@@ -222,9 +222,9 @@ func get_uninstall_script_absolute_path(difficult_index: int) -> String:
 func get_addon_install_script_absolute_path(addon_index: int, difficult_index: int) -> String:
 	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
 		if (0 <= difficult_index and difficult_index < pack_meta.difficults_list.size()): #如果给定的难度索引有效
-			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
+			return dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join(pack_meta.difficults_list[difficult_index].path).path_join(INSTALL_SCRIPT_NAME)
 		elif (difficult_index == -1): #否则如果给定的难度索引为-1(代表通配难度)
-			return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join("_").path_join(INSTALL_SCRIPT_NAME)
+			return dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(pack_meta.addons_list[addon_index].path).path_join(DIFFICULTS_DIR).path_join("_").path_join(INSTALL_SCRIPT_NAME)
 	return ""
 
 ## 传入附属包索引和难度索引，返回该附属包的该难度的卸载脚本的绝对路径，索引为-1时返回通配难度。当失败时返回空字符串，并在未加载安装包时执行会出现异常
@@ -237,19 +237,50 @@ func get_addon_uninstall_script_absolute_path(addon_index: int, difficult_index:
 	return ""
 
 ## 传入模组访问标识名，返回该模组的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+## 不建议与get_mod_object_index()重复使用
 func get_mod_absolute_path(access_name: String) -> String:
 	for mod_object in pack_meta.mods_list: #遍历所有模组注册项
 		if (mod_object.name == access_name):
 			return dir_access.get_current_dir().path_join(MODS_DIR).path_join(mod_object.path)
 	return ""
 
+## 传入模组访问标识名，返回该模组注册项于pack_meta.mods_list中的位置。当失败时返回-1，并在未加载安装包时执行会出现异常
+## 不建议与get_mod_absolute_path()重复使用
+func get_mod_object_index(access_name: String) -> int:
+	for mod_index in pack_meta.mods_list.size(): #遍历所有模组注册项
+		if (pack_meta.mods_list[mod_index].name == access_name):
+			return mod_index
+	return -1
+
+## 通过模组注册项于pack_meta.mods_list中的位置获取该模组的绝对路径。在未加载安装包时执行会出现异常
+func get_mod_absolute_path_by_index(mod_index: int) -> String:
+	if (mod_index == -1):
+		return ""
+	return dir_access.get_current_dir().path_join(MODS_DIR).path_join(pack_meta.mods_list[mod_index].path)
+
 ## 传入附属包索引和模组访问标识名，返回该附属包中该模组的绝对路径。当失败时返回空字符串，并在未加载安装包时执行会出现异常
+## 不建议与get_addon_mod_object_index()重复使用
 func get_addon_mod_absolute_path(addon_index: int, access_name: String) -> String:
 	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
 		for mod_object in pack_meta.addons_list[addon_index].mods: #遍历所有模组注册项
 			if (mod_object.name == access_name):
-				return dir_access.get_current_dir().path_join(pack_meta.addons_list[addon_index].path).path_join(MODS_DIR).path_join(mod_object.path)
+				return dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(pack_meta.addons_list[addon_index].path).path_join(MODS_DIR).path_join(mod_object.path)
 	return ""
+
+## 传入附属包索引和模组访问标识名，返回该附属包中该模组注册项于mods中的位置。当失败时返回-1，并在未加载安装包时执行会出现异常
+## 不建议与get_addon_mod_absolute_path()重复使用
+func get_addon_mod_object_index(addon_index: int, access_name: String) -> int:
+	if (0 <= addon_index and addon_index < pack_meta.addons_list.size()): #如果给定的附属包索引有效
+		for mod_index in pack_meta.addons_list[addon_index].mods.size(): #遍历所有模组注册项
+			if (pack_meta.addons_list[addon_index].mods[mod_index].name == access_name):
+				return mod_index
+	return -1
+
+## 通过附属包索引和模组注册项于该附属包中mods中的位置获取该模组的绝对路径。在未加载安装包时执行会出现异常
+func get_addon_mod_absolute_path_by_index(addon_index: int, mod_index: int) -> String:
+	if (mod_index == -1):
+		return ""
+	return dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(pack_meta.addons_list[addon_index].path).path_join(MODS_DIR).path_join(pack_meta.addons_list[addon_index].mods[mod_index].path)
 
 ## 包元数据，其实差不多是把pack.json反序列化成类型数据
 class PackMeta extends RefCounted:

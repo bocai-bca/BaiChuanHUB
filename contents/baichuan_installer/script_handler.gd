@@ -9,6 +9,7 @@ var install_path: String
 
 ## 解析脚本的高级封装，给定一个指向脚本文件的绝对路径，返回一个ScriptParsed，或者发生错误(包括命令格式、语法错误或引用了不存在的资源)时返回null，自身不影响was_last_operation_error
 func parse_script(absolute_path: String, pack_access: BaiChuanInstaller_PackAccess, logger: BaiChuanInstaller_Logger) -> ScriptParsed:
+	print("开始解析脚本，absPath=", absolute_path)
 	if (not FileAccess.file_exists(absolute_path)): #如果路径指不到文件
 		logger.log_error("ScriptHandler: 未找到脚本：" + absolute_path)
 		return null
@@ -29,6 +30,7 @@ func parse_script(absolute_path: String, pack_access: BaiChuanInstaller_PackAcce
 ## 分段脚本，同时检查命令格式，返回一个容纳了分段后命令的数组。如果出错was_last_operation_error会变为true，届时该方法返回的输出请勿信任
 func split_script(script_content: String, logger: BaiChuanInstaller_Logger) -> Array[PackedStringArray]:
 	was_last_operation_error = false
+	script_content = script_content.replace("\r", "\n")
 	var commands: PackedStringArray = script_content.split("\n", false)
 	var result: Array[PackedStringArray] = []
 	for command in commands: #遍历每行文本
@@ -84,29 +86,40 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 	if (command_splitted.is_empty()): #如果命令为空
 		logger.log_error("ScriptHandler: 不允许空行命令")
 		return false
+	print(command_splitted, " with addonIndex=", addon_index)
 	match (command_splitted[0]): #匹配首项
 		"q": #qmods，用于将模组添加到QMods
-			var mod_path: String = pack_access.get_mod_absolute_path(command_splitted[1])
+			var mod_index: int = pack_access.get_mod_object_index(command_splitted[1])
+			var mod_path: String = pack_access.get_mod_absolute_path_by_index(mod_index)
+			var mod_dir_name: String = pack_access.pack_meta.mods_list[mod_index].path
 			if (mod_path.is_empty() and addon_index != -1):
-				mod_path = pack_access.get_addon_mod_absolute_path(addon_index, command_splitted[1])
+				mod_index = pack_access.get_addon_mod_object_index(addon_index, command_splitted[1])
+				mod_path = pack_access.get_addon_mod_absolute_path_by_index(addon_index, mod_index)
+				mod_dir_name = pack_access.pack_meta.addons_list[addon_index].mods[mod_index].path
 			if (mod_path.is_empty()):
 				logger.log_error("ScriptHandler: 无效模组引用名：" + command_splitted[1])
 				return false
 			if (not DirAccess.dir_exists_absolute(mod_path)):
 				logger.log_error("ScriptHandler: 未找到引用名为\"" + command_splitted[1] + "\"的模组：" + mod_path)
 				return false
-			return BaiChuanInstaller_DirRecurs.copy_recursive(mod_path, install_path.path_join("QMods"), logger)
+			print("mod=", mod_path, " install=", install_path.path_join("QMods").path_join(mod_dir_name))
+			return BaiChuanInstaller_DirRecurs.copy_recursive(mod_path, install_path.path_join("QMods").path_join(mod_dir_name), logger)
 		"b": #bepinex，用于将模组添加到BepInEx
-			var mod_path: String = pack_access.get_mod_absolute_path(command_splitted[1])
+			var mod_index: int = pack_access.get_mod_object_index(command_splitted[1])
+			var mod_path: String = pack_access.get_mod_absolute_path_by_index(mod_index)
+			var mod_dir_name: String = pack_access.pack_meta.mods_list[mod_index].path
 			if (mod_path.is_empty() and addon_index != -1):
-				mod_path = pack_access.get_addon_mod_absolute_path(addon_index, command_splitted[1])
+				mod_index = pack_access.get_addon_mod_object_index(addon_index, command_splitted[1])
+				mod_path = pack_access.get_addon_mod_absolute_path_by_index(addon_index, mod_index)
+				mod_dir_name = pack_access.pack_meta.addons_list[addon_index].mods[mod_index].path
 			if (mod_path.is_empty()):
 				logger.log_error("ScriptHandler: 无效模组引用名：" + command_splitted[1])
 				return false
 			if (not DirAccess.dir_exists_absolute(mod_path)):
 				logger.log_error("ScriptHandler: 未找到引用名为\"" + command_splitted[1] + "\"的模组：" + mod_path)
 				return false
-			return BaiChuanInstaller_DirRecurs.copy_recursive(mod_path, install_path.path_join("BepInEx/plugins"), logger)
+			print("mod=", mod_path, " install=", install_path.path_join("BepInEx/plugins").path_join(mod_dir_name))
+			return BaiChuanInstaller_DirRecurs.copy_recursive(mod_path, install_path.path_join("BepInEx/plugins").path_join(mod_dir_name), logger)
 		"d": #delete，用于删除游戏中的目录或文件
 			var path: String = install_path.path_join(command_splitted[1])
 			if (FileAccess.file_exists(path) or DirAccess.dir_exists_absolute(path)):
@@ -154,6 +167,8 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 					logger.log_error("ScriptHandler: 复制目录时出错：\"" + source_path + "\" -> \"" + target_path + "\"")
 					return false
 			logger.log_error("ScriptHandler: 源目录不存在：" + source_path)
+		_: #未知命令
+			logger.log_error("ScriptHandler: 未知命令，分段内容：" + str(command_splitted))
 	return false
 
 ## 已解析的脚本，定义本类是用来其他部分代码强类型化的
@@ -171,6 +186,8 @@ class CommandSplitter extends Object:
 
 	## 命令分段器，将一行命令按语法格式分为多个段，如果出现问题将返回空数组，也因此请勿传入空文本
 	static func split(command: String, logger: BaiChuanInstaller_Logger) -> PackedStringArray:
+		if (command.is_empty()):
+			return []
 		var result: PackedStringArray = []
 		var length: int = command.length() #获取行长度
 		var current_at: int = 0 #字符索引指针
@@ -193,13 +210,14 @@ class CommandSplitter extends Object:
 						logger.log_error("ScriptHandler: 分段命令时发现问题，在非分段处发现了进入引号")
 						return []
 			elif (command[current_at] == SPACE): #否则如果当前字符为空格
-				if (is_in_quotation): #如果当前字符处于引号内
+				if (not is_in_quotation): #如果当前字符不处于引号内
 					## 直接记录分段
-					result.append(command.substr(current_start_at, current_at - current_start_at + 1))
+					result.append(command.substr(current_start_at, current_at - current_start_at))
 					current_start_at = current_at + 1
 				#else: #否则(当前字符不处于引号内)
 					## 忽视分段
 			current_at += 1
+		result.append(command.substr(current_start_at, current_at - current_start_at))
 		return result
 
 	## 给定索引的特定偏移处的是否是段落边界，偏移索引正数代表向右偏移，负数代表向左偏移，0代表不偏移，如果出现问题也将返回false

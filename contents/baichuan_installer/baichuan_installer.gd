@@ -172,20 +172,24 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	for install_addon in install_addons: #遍历所有附属包索引
 		if (pack_access.pack_meta.addons_list[install_addon].support_difficults.has("_")):
 			addons_scripts.append(script_handler.parse_script(pack_access.get_addon_install_script_absolute_path(install_addon, -1), pack_access, logger))
-		addons_scripts.append(script_handler.parse_script(pack_access.get_addon_install_script_absolute_path(install_addon, install_difficult), pack_access, logger))
+		else:
+			addons_scripts.append(script_handler.parse_script(pack_access.get_addon_install_script_absolute_path(install_addon, install_difficult), pack_access, logger))
+	script_handler.install_path = absolute_path
 	##  02执行难度安装脚本
 	logger.log_info("正在执行难度安装脚本")
 	for command_index in difficult_script.commands_splitted.size(): #遍历难度安装脚本的命令
-		if (script_handler.run_command(difficult_script.commands_splitted[command_index], -1, pack_access, logger)): #执行命令并检查是否成功
+		if (not script_handler.run_command(difficult_script.commands_splitted[command_index], -1, pack_access, logger)): #执行命令并检查是否成功
 			logger.log_error("难度安装脚本执行过程出现问题，发生于：" + str(command_index))
+			logger.log_warn("安装流程中止")
 			return false
 	##  /02
 	##  03执行附属包安装脚本
-	for addon_index in addons_scripts.size(): #遍历所有安装包脚本
+	for addon_index in addons_scripts.size(): #遍历所有附属包脚本
 		logger.log_info("正在执行附属包安装脚本：" + str(addon_index))
 		for command_index in addons_scripts[addon_index].commands_splitted.size(): #遍历当前附属包安装脚本的命令
-			if (script_handler.run_command(addons_scripts[addon_index].commands_splitted[command_index], addon_index, pack_access,logger)): #执行命令并检查是否成功
+			if (not script_handler.run_command(addons_scripts[addon_index].commands_splitted[command_index], addon_index, pack_access,logger)): #执行命令并检查是否成功
 				logger.log_error("附属包安装脚本执行过程出现问题，发生于：" + str(command_index))
+				logger.log_warn("安装流程中止")
 				return false
 	##  /03
 	## 04制作卸载脚本
