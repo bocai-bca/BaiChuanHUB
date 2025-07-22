@@ -22,12 +22,12 @@ script = ExtResource("2_tekc0")
 layout_mode = 2
 theme = ExtResource("1_kq37u")
 tab_alignment = 1
-current_tab = 2
+current_tab = 0
 tab_focus_mode = 0
 
 [node name="Welcome" type="VBoxContainer" parent="TabContainer"]
-visible = false
 layout_mode = 2
+theme_override_constants/separation = 0
 metadata/_tab_index = 0
 
 [node name="TextureRect" type="TextureRect" parent="TabContainer/Welcome"]
@@ -58,12 +58,18 @@ layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_kq37u")
 bbcode_enabled = true
-text = "[center]百川HUB(早期实验版)最终用户许可协议[/center]
+text = "[center]百川HUB(早期实验版)使用协议[/center]
 
 以下将百川HUB(早期实验版)称为\"本程序\"。
-请在继续使用本程序前仔细阅读本协议，请您在已完全同意本协议后再点击\"我已阅读并同意该协议\"按钮。
+请在继续使用本程序前仔细阅读本协议，请您在已完全同意本协议后再点击\"我已阅读并同意该协议\"按钮。若您不同意本协议，请勿使用本程序。
 
-"
+一，开源协议
+本程序源代码按照GPL-3.0(GNU General Public License v3.0)协议开源，本协议在其基础上补充对本程序发行版的权利与责任划定，本协议未提到的部分继续遵循GPL-3.0。
+源码仓库URL：https://github.com/bocai-bca/BaiChuanHUB
+
+二，免责声明
+本程序属于仍需经历测试检验的早期实验版，开发方尚不能保证其能正常无误地运行，且鉴于其的开源性质和其遵循的开源协议，本协议在此声明：对于您因运行本程序而获得的任何损失，如数据错误、数据丢失、硬件损坏等，无论损失的造成原因是本程序按开发方的设计正常运行，还是以超出了开发方预期的方式运行(即发生意外的错误)，开发方都无需承担任何责任、无需对您进行任何赔偿。
+同意本协议意味着您同意/接受该免责声明，即每次使用本程序都需要您同意一次该免责声明，您的每次同意可仅对该次使用生效。"
 
 [node name="AgreeButtonBar" type="HBoxContainer" parent="TabContainer/EULA"]
 layout_mode = 2
@@ -79,6 +85,7 @@ size_flags_horizontal = 3
 text = "我已阅读并同意该协议"
 
 [node name="Installer" type="ScrollContainer" parent="TabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 

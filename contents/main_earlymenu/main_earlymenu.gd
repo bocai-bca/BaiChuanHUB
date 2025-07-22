@@ -50,7 +50,7 @@ enum GameInfoState{
 }
 const TabsNames: PackedStringArray = [
 	"欢迎",
-	"最终用户许可协议",
+	"使用协议",
 	"百川归海安装器",
 ]
 const InstallerOperationTabsNames: PackedStringArray = [
