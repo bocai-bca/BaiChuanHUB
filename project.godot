@@ -18,6 +18,7 @@ config/custom_user_dir_name="BCASoft/BaiChuanHUB"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 run/low_processor_mode=true
 config/icon="uid://ctrqsk5d45c8w"
+config/windows_native_icon="res://icon.ico"
 
 [display]
 
