@@ -9,6 +9,7 @@ const STEAM_GAME_PATH: PackedStringArray = [
 	"/Program Files/Steam/steamapps/common/Subnautica/Subnautica.exe",
 	"/Program Files (x86)/Steam/steamapps/common/Subnautica/Subnautica.exe",
 	"/SteamLibrary/steamapps/common/Subnautica/Subnautica.exe",
+	"/Steam/steamapps/common/Subnautica/Subnautica.exe",
 ]
 
 ## 在给定分区中搜寻存在的深海游戏(Subnautica.exe)路径，并打包进一个紧缩字符串数组中返回，只返回可见的符合该名称的文件的路径，不保证文件可用、正确
