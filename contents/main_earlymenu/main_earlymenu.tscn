@@ -1,9 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://b6boxed5w0ujx"]
+[gd_scene load_steps=5 format=3 uid="uid://b6boxed5w0ujx"]
 
 [ext_resource type="Theme" uid="uid://cql86uwxm36wp" path="res://contents/main_earlymenu/theme.tres" id="1_kq37u"]
 [ext_resource type="Script" uid="uid://ubiqiglpve8g" path="res://contents/main_earlymenu/main_earlymenu.gd" id="2_tekc0"]
 [ext_resource type="Texture2D" uid="uid://beu0pefh5ovbs" path="res://contents/main_earlymenu/welcome_picture_0.jpg" id="3_x8ole"]
-[ext_resource type="ButtonGroup" uid="uid://cey28pqe8n2uh" path="res://contents/main_earlymenu/difficult_button_group.tres" id="4_sh76g"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tekc0"]
 bg_color = Color(0, 0, 0, 0.12549)
@@ -235,10 +234,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="CheckBox" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer/DifficultsNodesContainer"]
-layout_mode = 2
-button_group = ExtResource("4_sh76g")
-
 [node name="AddonsContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -283,8 +278,9 @@ text = "保留BepInEx和QMods前置"
 [node name="ConfirmUninstall" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall"]
 layout_mode = 2
 size_flags_vertical = 3
+disabled = true
 text = "卸载
-9.2.3、普通、0个附属包"
+不可用"
 
 [node name="FileVerify" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs"]
 visible = false
@@ -302,8 +298,11 @@ vertical_alignment = 1
 [node name="StartVerify" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify"]
 layout_mode = 2
 size_flags_vertical = 3
+disabled = true
 text = "校验整合包完整性
-(仅适用于已安装当前选定安装包的情形)"
+(仅适用于已安装当前选定安装包的情形)
+
+此功能还没做"
 
 [node name="Log" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel"]
 layout_mode = 2

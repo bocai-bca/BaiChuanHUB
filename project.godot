@@ -16,7 +16,7 @@ config/use_custom_user_dir=true
 config/custom_user_dir_name="BCASoft/BaiChuanHUB"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 run/low_processor_mode=true
-config/icon="res://icon.svg"
+config/icon="uid://ctrqsk5d45c8w"
 
 [display]
 

@@ -20,6 +20,8 @@ const UNINSTALL_SCRIPT_NAME: String = "uninstall.bcis"
 const ROOT_PACK_META: String = "pack.json"
 ## 附属包元数据
 const ADDON_META: String = "addon.json"
+## 安装信息元数据，存在于游戏根目录
+const INSTALLED_META: String = "baichuan_installed_meta.json"
 
 ## 命令处理器实例
 var script_handler: BaiChuanInstaller_ScriptHandler = BaiChuanInstaller_ScriptHandler.new()

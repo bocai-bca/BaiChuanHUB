@@ -28,6 +28,8 @@ class_name Main_EarlyMenu
 @onready var n_operation_install_confirm_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall as Button
 @onready var n_operation_install_option_difficults_container: VBoxContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer/DifficultsNodesContainer as VBoxContainer
 @onready var n_operation_install_option_addons_container: VBoxContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer/ScrollContainer/AddonsNodesContainer as VBoxContainer
+@onready var n_operation_uninstall_keep_framework_checkbox: CheckBox = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/CheckBox as CheckBox
+@onready var n_operation_uninstall_confirm_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall as Button
 
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 720)
@@ -156,12 +158,20 @@ func refresh_game_info() -> void:
 	match (game_state_report.baichuan_installed): #匹配状态报告的百川安装状况
 		BaiChuanInstaller.GameStateReport.BaiChuanInstalled.ERROR: #如果发生错误
 			text_baichuan_installed = "[color=red]发生错误[/color]"
+			n_operation_uninstall_confirm_button.text = "卸载\n不可用"
+			n_operation_uninstall_confirm_button.disabled = true
 		BaiChuanInstaller.GameStateReport.BaiChuanInstalled.NO: #如果什么都不存在
 			text_baichuan_installed = "[color=red]否[/color]"
+			n_operation_uninstall_confirm_button.text = "卸载\n不可用"
+			n_operation_uninstall_confirm_button.disabled = true
 		BaiChuanInstaller.GameStateReport.BaiChuanInstalled.HALF: #如果存在部分迹象
 			text_baichuan_installed = "[color=yellow]部分[/color]"
+			n_operation_uninstall_confirm_button.text = "卸载\n不可用"
+			n_operation_uninstall_confirm_button.disabled = true
 		BaiChuanInstaller.GameStateReport.BaiChuanInstalled.FULL: #如果存在所有迹象
-			text_baichuan_installed = "[color=green]是[/color]"
+			text_baichuan_installed = "[color=green]{0} {1} {2}附属[/color]".format([game_state_report.baichuan_installed_version_name, game_state_report.baichuan_installed_difficult_name, str(game_state_report.baichuan_installed_addons_count)])
+			n_operation_uninstall_confirm_button.text = "卸载\n{0}、{1}、{2}个附属包".format([game_state_report.baichuan_installed_version_name, game_state_report.baichuan_installed_difficult_name, str(game_state_report.baichuan_installed_addons_count)])
+			n_operation_uninstall_confirm_button.disabled = false
 	n_state_info_text.text = text.format([text_version_verify, text_bepinex_exist, text_qmods_exist, text_baichuan_installed])
 
 ## 加载安装包
@@ -317,7 +327,9 @@ func installer_install_confirm() -> void:
 
 ## 安装器/卸载/确认卸载
 func installer_uninstall_confirm() -> void:
-	pass
+	installer.uninstall(n_line_edit_game_location.text.get_base_dir(), n_operation_uninstall_keep_framework_checkbox.button_pressed)
+	refresh_game_info()
+	refresh_log() #刷新日志
 
 ## 安装器/验证/开始验证
 func installer_verify_start() -> void:

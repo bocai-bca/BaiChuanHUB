@@ -86,22 +86,31 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 	## 00百川安装状态检测
 	var files: PackedStringArray = root_dir.get_files()
 	i = 0
-	if (files.has("baichuan_install_data.json")): #如果存在安装标识信息
+	if (files.has(BaiChuanInstaller_PackAccess.INSTALLED_META)): #如果存在安装标识信息
 		#logger.log_info("已找到百川安装标识文件")
 		i += 1
-	if (files.has("uninstall.bcis")): #如果存在卸载脚本
+	if (files.has(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME)): #如果存在卸载脚本
 		#logger.log_info("已找到百川卸载脚本文件")
 		i += 1
 	if (root_dir.file_exists("QMods/CustomCraft2SML/WorkingFiles/AllriversflowtotheseaRESET.txt")): #如果存在百川mod特征文件
 		#logger.log_info("已找到百川mod特征文件")
 		i += 1
+	if (root_dir.file_exists(BaiChuanInstaller_PackAccess.INSTALLED_META)): #如果存在安装元数据
+		i += 1
 	match (i):
 		0:
 			result.baichuan_installed = GameStateReport.BaiChuanInstalled.NO
-		1, 2:
+		1, 2, 3:
 			result.baichuan_installed = GameStateReport.BaiChuanInstalled.HALF
-		3:
+		4:
 			result.baichuan_installed = GameStateReport.BaiChuanInstalled.FULL
+			var installed_meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(root_dir.get_current_dir().path_join(BaiChuanInstaller_PackAccess.INSTALLED_META))) as Dictionary
+			if (installed_meta == null):
+				result.baichuan_installed = GameStateReport.BaiChuanInstalled.ERROR
+			else:
+				result.baichuan_installed_version_name = installed_meta.get("version_name", "未知") as String
+				result.baichuan_installed_difficult_name = installed_meta.get("difficult_name", "未知") as String
+				result.baichuan_installed_addons_count = installed_meta.get("addons_count", 0) as int
 	## /00
 	return result
 
@@ -147,11 +156,51 @@ func load_new_pack(pack_path: String) -> PackMetaReport:
 ## 安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，并返回成功与否
 func install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> bool:
 	logger.log_info("开始安装")
+	script_handler.install_path = absolute_path
 	var dir_access: DirAccess = DirAccess.open(absolute_path) #打开安装目录为DirAccess
 	if (dir_access == null): #如果为null，说明出错
 		logger.log_error("打开目录失败：" + absolute_path)
 		logger.log_error("安装过程出现问题而中止")
 		return false
+	var need_uninstall: bool = false
+	var game_state: GameStateReport = game_state_detect(absolute_path.path_join("Subnautica.exe"))
+	match (game_state.bepinex_installed):
+		GameStateReport.BepInExInstalled.ERROR:
+			logger.log_error("检测BepInEx状态时发生错误")
+			return false
+		GameStateReport.BepInExInstalled.NO:
+			pass
+		_:
+			if (reinstall):
+				logger.log_info("发现存在BepInEx，将进行覆盖")
+				need_uninstall = true
+			else:
+				logger.log_warn("发现存在BepInEx，请在安装前还原到纯净原版游戏状态。若执意继续安装或希望进行重新安装百川，请勾选\"重新安装\"，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				return false
+	match (game_state.is_qmods_exist):
+		true:
+			if (reinstall):
+				logger.log_info("发现存在QMods")
+				need_uninstall = true
+			else:
+				logger.log_warn("发现存在QMods，请在安装前还原到纯净原版游戏状态。若执意继续安装或希望进行重新安装百川，请勾选\"重新安装\"，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				return false
+	match (game_state.baichuan_installed):
+		GameStateReport.BaiChuanInstalled.ERROR:
+			logger.log_error("检测百川安装状态时发生错误")
+			return false
+		GameStateReport.BaiChuanInstalled.NO:
+			pass
+		_:
+			if (reinstall):
+				logger.log_info("发现百川安装迹象，将进行重新安装")
+				need_uninstall = true
+			else:
+				logger.log_error("发现存在百川安装迹象，若希望进行重新安装百川，请勾选\"重新安装\"。另外，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				return false
+	if (need_uninstall):
+		## 重新安装
+		uninstall(absolute_path, false)
 	## 00数据检查
 	if (not (0 <= install_difficult and install_difficult < pack_access.pack_meta.difficults_list.size())): #如果给定的安装难度索引不在有效范围内
 		logger.log_error("不存在指定的安装难度索引：" + str(install_difficult))
@@ -164,17 +213,46 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		logger.log_error("安装过程出现问题而中止")
 		return false
 	## /00 从此处起可确保传入的安装路径可访问、难度索引可用、附属包索引可用
+	var pack_dir: String = pack_access.dir_access.get_current_dir()
 	logger.log_info("正在放置前置")
-	BaiChuanInstaller_DirRecurs.copy_recursive(pack_access.dir_access.get_current_dir().path_join(pack_access.FRAMEWORKS_DIR), absolute_path, logger)
+	BaiChuanInstaller_DirRecurs.copy_recursive(pack_dir.path_join(pack_access.FRAMEWORKS_DIR), absolute_path, logger)
+	logger.log_info("正在放置数据")
+	if (DirAccess.dir_exists_absolute(pack_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join("_"))): #如果存在通配难度数据
+		print("存在通配难度数据")
+		BaiChuanInstaller_DirRecurs.copy_recursive(pack_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join("_"), absolute_path, logger)
+	if (DirAccess.dir_exists_absolute(pack_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join(pack_access.pack_meta.difficults_list[install_difficult].path))): #如果存在对应的难度数据
+		print("存在匹配难度数据")
+		BaiChuanInstaller_DirRecurs.copy_recursive(pack_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join(pack_access.pack_meta.difficults_list[install_difficult].path), absolute_path, logger)
+	for install_addon in install_addons: #遍历所有附属包索引
+		var addon_dir: String = pack_dir.path_join(BaiChuanInstaller_PackAccess.ADDONS_DIR).path_join(pack_access.pack_meta.addons_list[install_addon].path)
+		print("addon_dir=", addon_dir)
+		if (DirAccess.dir_exists_absolute(addon_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join("_"))): #如果存在通配难度数据
+			print("附属包", install_addon,"存在通配难度数据")
+			BaiChuanInstaller_DirRecurs.copy_recursive(addon_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join("_"), absolute_path, logger)
+		if (DirAccess.dir_exists_absolute(addon_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join(pack_access.pack_meta.difficults_list[install_difficult].path))): #如果存在对应的难度数据
+			print("附属包", install_addon,"存在匹配难度数据")
+			BaiChuanInstaller_DirRecurs.copy_recursive(addon_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join(pack_access.pack_meta.difficults_list[install_difficult].path), absolute_path, logger)
 	## 01按顺序进行安装脚本
-	var difficult_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(pack_access.get_install_script_absolute_path(install_difficult), pack_access, logger)
+	var difficult_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(pack_access.get_install_script_absolute_path(install_difficult), pack_access, logger, false)
+	if (difficult_script == null):
+		logger.log_warn("安装流程因难度安装脚本解析出错中止")
+		return false
 	var addons_scripts: Array[BaiChuanInstaller_ScriptHandler.ScriptParsed] = []
 	for install_addon in install_addons: #遍历所有附属包索引
-		if (pack_access.pack_meta.addons_list[install_addon].support_difficults.has("_")):
-			addons_scripts.append(script_handler.parse_script(pack_access.get_addon_install_script_absolute_path(install_addon, -1), pack_access, logger))
-		else:
-			addons_scripts.append(script_handler.parse_script(pack_access.get_addon_install_script_absolute_path(install_addon, install_difficult), pack_access, logger))
-	script_handler.install_path = absolute_path
+		var wildmatch_path: String = pack_access.get_addon_install_script_absolute_path(install_addon, -1)
+		if (pack_access.pack_meta.addons_list[install_addon].support_difficults.has("_")): #如果存在通配
+			var wildmatch_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(wildmatch_path, pack_access, logger, false)
+			if (wildmatch_script == null):
+				logger.log_warn("安装流程因附属包通配安装脚本解析出错中止")
+				return false
+			addons_scripts.append(wildmatch_script)
+		var match_path: String = pack_access.get_addon_install_script_absolute_path(install_addon, install_difficult)
+		if (pack_access.pack_meta.addons_list[install_addon].support_difficults.has(pack_access.pack_meta.difficults_list[install_difficult].path)): #如果存在匹配
+			var match_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(match_path, pack_access, logger, false)
+			if (match_script == null):
+				logger.log_warn("安装流程因附属包匹配安装脚本解析出错中止")
+				return false
+			addons_scripts.append(match_script)
 	##  02执行难度安装脚本
 	logger.log_info("正在执行难度安装脚本")
 	for command_index in difficult_script.commands_splitted.size(): #遍历难度安装脚本的命令
@@ -201,12 +279,98 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 			uninstall_script_content += FileAccess.get_file_as_string(pack_access.get_addon_uninstall_script_absolute_path(install_addons[i], -1))
 		uninstall_script_content += FileAccess.get_file_as_string(pack_access.get_addon_uninstall_script_absolute_path(install_addons[i], install_difficult))
 	uninstall_script_content += FileAccess.get_file_as_string(pack_access.get_uninstall_script_absolute_path(install_difficult))
-	var uninstall_script_file: FileAccess = FileAccess.open(absolute_path.path_join(pack_access.UNINSTALL_SCRIPT_NAME), FileAccess.WRITE)
+	var uninstall_script_file: FileAccess = FileAccess.open(absolute_path.path_join(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME), FileAccess.WRITE)
+	if (uninstall_script_file == null):
+		logger.log_error("打开卸载脚本失败")
+		logger.log_warn("安装流程中止")
+		return false
 	uninstall_script_file.store_string(uninstall_script_content)
 	## /04
+	## 05放置安装元数据
+	var install_meta_file: FileAccess = FileAccess.open(absolute_path.path_join(BaiChuanInstaller_PackAccess.INSTALLED_META), FileAccess.WRITE)
+	if (install_meta_file == null):
+		logger.log_error("打开安装元数据失败")
+		logger.log_warn("安装流程中止")
+		return false
+	var install_meta_data: Dictionary[String, Variant] = {
+		"version_name": pack_access.pack_meta.version_name,
+		"difficult_name": pack_access.pack_meta.difficults_list[install_difficult].name,
+		"addons_count": install_addons.size()
+	}
+	install_meta_file.store_string(JSON.stringify(install_meta_data, "\t", false, false))
+	## /05
 	## /01
 	logger.log_info("安装流程结束")
 	return true
+
+## 卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置，并返回成功与否
+func uninstall(absolute_path: String, keep_framework: bool) -> bool:
+	logger.log_info("开始卸载")
+	script_handler.install_path = absolute_path
+	if (FileAccess.file_exists(absolute_path.path_join(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME))): #如果存在卸载脚本
+		## 00执行卸载脚本
+		var uninstall_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(absolute_path.path_join(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME), pack_access, logger, true)
+		if (uninstall_script == null):
+			logger.log_warn("卸载流程因卸载脚本解析出错中止")
+			return false
+		for command_index in uninstall_script.commands_splitted.size(): #遍历难度安装脚本的命令
+			if (not script_handler.run_command(uninstall_script.commands_splitted[command_index], -1, null, logger)): #执行命令并检查是否成功
+				logger.log_error("卸载脚本执行过程出现问题，发生于：" + str(command_index))
+				logger.log_warn("卸载流程中止")
+				return false
+		## /00
+		## 01移除卸载脚本及安装元数据
+		if (DirAccess.remove_absolute(absolute_path.path_join(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME)) != OK):
+			logger.log_error("删除卸载脚本时发生问题")
+			logger.log_warn("卸载流程中止")
+			return false
+		if (FileAccess.file_exists(absolute_path.path_join(BaiChuanInstaller_PackAccess.INSTALLED_META))):
+			if (DirAccess.remove_absolute(absolute_path.path_join(BaiChuanInstaller_PackAccess.INSTALLED_META))):
+				logger.log_error("删除安装元数据时发生问题")
+				logger.log_warn("卸载流程中止")
+				return false
+		else:
+			logger.log_warn("未找到安装元数据")
+		## /01
+		if (not keep_framework): #如果不要求保留前置，即需要删除前置
+			## 02删除前置
+			var success: bool = true
+			logger.log_info("正在删除前置")
+			var dirs_need_delete: PackedStringArray = [
+				"BepInEx", "BepInEx_Shim_Backup", "QMods"
+			]
+			for dir_need_delete in dirs_need_delete:
+				var path: String = absolute_path.path_join(dir_need_delete)
+				if (DirAccess.dir_exists_absolute(path)):
+					print("正在删除：", path)
+					if (not BaiChuanInstaller_DirRecurs.delete_recursive(path, logger)):
+						logger.log_error("删除目录时出错：" + dir_need_delete)
+						success = false
+			var misc_files: PackedStringArray = [
+				"doorstop_config.ini",
+				"HarmonyLog.txt",
+				"qmodmanager_log-Subnautica.txt",
+				"qmodmanager-config.json",
+				"winhttp.dll",
+			]
+			for misc_file in misc_files:
+				var path: String = absolute_path.path_join(misc_file)
+				if (FileAccess.file_exists(path)):
+					if (not DirAccess.remove_absolute(path)):
+						logger.log_error("删除文件时出错：" + misc_file)
+						success = false
+			## /02
+			if (success):
+				logger.log_info("卸载流程结束")
+				return true
+			else:
+				logger.log_warn("卸载流程结束，过程中发生错误")
+				return false
+		logger.log_info("卸载流程结束")
+		return true
+	#else: #否则(不存在卸载脚本)
+	logger.log_info("未找到卸载脚本，如需卸载请手动删除相关文件")
+	return false
 
 ## 游戏状态报告
 class GameStateReport extends RefCounted:
@@ -236,6 +400,12 @@ class GameStateReport extends RefCounted:
 	var is_qmods_exist: bool
 	## 百川安装状况
 	var baichuan_installed: BaiChuanInstalled
+	## 百川安装版本名称(从安装元数据读取)
+	var baichuan_installed_version_name: String
+	## 百川安装难度名称(从安装元数据读取)
+	var baichuan_installed_difficult_name: String
+	## 百川安装附属包数量(从安装元数据读取)
+	var baichuan_installed_addons_count: int
 
 ## 安装包元数据报告
 class PackMetaReport extends RefCounted:

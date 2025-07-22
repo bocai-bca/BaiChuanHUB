@@ -8,7 +8,7 @@ var was_last_operation_error: bool = false
 var install_path: String
 
 ## 解析脚本的高级封装，给定一个指向脚本文件的绝对路径，返回一个ScriptParsed，或者发生错误(包括命令格式、语法错误或引用了不存在的资源)时返回null，自身不影响was_last_operation_error
-func parse_script(absolute_path: String, pack_access: BaiChuanInstaller_PackAccess, logger: BaiChuanInstaller_Logger) -> ScriptParsed:
+func parse_script(absolute_path: String, pack_access: BaiChuanInstaller_PackAccess, logger: BaiChuanInstaller_Logger, bypass_pack_access: bool) -> ScriptParsed:
 	print("开始解析脚本，absPath=", absolute_path)
 	if (not FileAccess.file_exists(absolute_path)): #如果路径指不到文件
 		logger.log_error("ScriptHandler: 未找到脚本：" + absolute_path)
@@ -19,7 +19,7 @@ func parse_script(absolute_path: String, pack_access: BaiChuanInstaller_PackAcce
 		return null
 	var was_command_error: bool = false
 	for command_splitted in commands_splitted: #遍历所有已分段命令
-		if (not is_command_executable(command_splitted, pack_access)): #如果该命令不可执行
+		if (not is_command_executable(command_splitted, pack_access, bypass_pack_access)): #如果该命令不可执行
 			was_command_error = true
 			logger.log_error("ScriptHandler: 命令检查出错，该行命令完整分段：" + str(command_splitted))
 	if (was_command_error): #如果有命令检查出错
@@ -42,7 +42,7 @@ func split_script(script_content: String, logger: BaiChuanInstaller_Logger) -> A
 	return result
 
 ## 检查命令是否可安全执行，结果将返回到was_last_operation_error，方法将返回错误理由
-func is_command_executable(command_splitted: PackedStringArray, pack_access: BaiChuanInstaller_PackAccess) -> String:
+func is_command_executable(command_splitted: PackedStringArray, pack_access: BaiChuanInstaller_PackAccess, bypass_pack_access: bool) -> String:
 	if (command_splitted.is_empty()): #如果命令为空
 		was_last_operation_error = true
 		return "ScriptHandler: 不允许空行命令"
@@ -52,6 +52,9 @@ func is_command_executable(command_splitted: PackedStringArray, pack_access: Bai
 				was_last_operation_error = true
 				return "ScriptHandler: 命令缺少参数"
 			var ref_name: String = command_splitted[1]
+			if (bypass_pack_access):
+				was_last_operation_error = false
+				return "ScriptHandler: 命令可安全执行(跳过PackAccess检查)"
 			for mod in pack_access.pack_meta.mods_list: #遍历模组列表
 				if (ref_name == mod.name): #如果名称匹配上了
 					was_last_operation_error = false
@@ -68,6 +71,9 @@ func is_command_executable(command_splitted: PackedStringArray, pack_access: Bai
 				return "ScriptHandler: 命令缺少参数"
 			match (command_splitted[1]): #匹配第二段
 				"p":
+					if (bypass_pack_access):
+						was_last_operation_error = false
+						return "ScriptHandler: 命令可安全执行(跳过PackAccess检查)"
 					if (not (FileAccess.file_exists(pack_access.dir_access.get_current_dir().path_join(command_splitted[2])) or pack_access.dir_access.dir_exists(command_splitted[2]))): #如果不存在指定的文件或目录
 						was_last_operation_error = true
 						return "ScriptHandler: 命令引用的包内路径不存在"
@@ -89,6 +95,9 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 	print(command_splitted, " with addonIndex=", addon_index)
 	match (command_splitted[0]): #匹配首项
 		"q": #qmods，用于将模组添加到QMods
+			if (pack_access == null):
+				logger.log_error("ScriptHandler: 未指定PackAccess")
+				return false
 			var mod_index: int = pack_access.get_mod_object_index(command_splitted[1])
 			var mod_path: String = pack_access.get_mod_absolute_path_by_index(mod_index)
 			var mod_dir_name: String = pack_access.pack_meta.mods_list[mod_index].path
@@ -105,6 +114,9 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 			print("mod=", mod_path, " install=", install_path.path_join("QMods").path_join(mod_dir_name))
 			return BaiChuanInstaller_DirRecurs.copy_recursive(mod_path, install_path.path_join("QMods").path_join(mod_dir_name), logger)
 		"b": #bepinex，用于将模组添加到BepInEx
+			if (pack_access == null):
+				logger.log_error("ScriptHandler: 未指定PackAccess")
+				return false
 			var mod_index: int = pack_access.get_mod_object_index(command_splitted[1])
 			var mod_path: String = pack_access.get_mod_absolute_path_by_index(mod_index)
 			var mod_dir_name: String = pack_access.pack_meta.mods_list[mod_index].path
@@ -126,16 +138,22 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 				DirAccess.remove_absolute(path)
 			else:
 				logger.log_warn("ScriptHandler: 未找到待删除的文件或目录：" + path)
-				return false
+				return true
+			return true
 		"c": #clear，清空一个目录中的所有内容
 			var path: String = install_path.path_join(command_splitted[1])
 			if (DirAccess.dir_exists_absolute(path)):
 				return BaiChuanInstaller_DirRecurs.clear_recursive(path, logger)
+			logger.log_warn("ScriptHandler: 未找到待清空的目录：" + path)
+			return true
 		"cf": #copyfile，复制文件到游戏中特定位置
 			var source_path: String
 			var target_path: String
 			match (command_splitted[1]):
 				"p": #从包内
+					if (pack_access == null):
+						logger.log_error("ScriptHandler: 未指定PackAccess")
+						return false
 					source_path = pack_access.dir_access.get_current_dir().path_join(command_splitted[2])
 					target_path = install_path.path_join(command_splitted[3])
 				"g": #从游戏内
@@ -148,12 +166,17 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 				if (DirAccess.copy_absolute(source_path, target_path) != OK):
 					logger.log_error("ScriptHandler: 复制文件失败：\"" + source_path + "\" -> \"" + target_path + "\"")
 					return false
+				return true
 			logger.log_error("ScriptHandler: 源文件不存在：" + source_path)
+			return false
 		"cd": #copydir，复制目录到游戏中特定位置
 			var source_path: String
 			var target_path: String
 			match (command_splitted[1]):
 				"p": #从包内
+					if (pack_access == null):
+						logger.log_error("ScriptHandler: 未指定PackAccess")
+						return false
 					source_path = pack_access.dir_access.get_current_dir().path_join(command_splitted[2])
 					target_path = install_path.path_join(command_splitted[3])
 				"g": #从游戏内
@@ -166,7 +189,9 @@ func run_command(command_splitted: PackedStringArray, addon_index: int, pack_acc
 				if (not BaiChuanInstaller_DirRecurs.copy_recursive(source_path, target_path, logger)):
 					logger.log_error("ScriptHandler: 复制目录时出错：\"" + source_path + "\" -> \"" + target_path + "\"")
 					return false
+				return true
 			logger.log_error("ScriptHandler: 源目录不存在：" + source_path)
+			return false
 		_: #未知命令
 			logger.log_error("ScriptHandler: 未知命令，分段内容：" + str(command_splitted))
 	return false
@@ -218,6 +243,11 @@ class CommandSplitter extends Object:
 					## 忽视分段
 			current_at += 1
 		result.append(command.substr(current_start_at, current_at - current_start_at))
+		for i in result.size(): #按索引遍历每个分段
+			if (result[i].begins_with("\"")):
+				result[i] = result[i].erase(0)
+			if (result[i].ends_with("\"")):
+				result[i] = result[i].erase(result[i].length() - 1)
 		return result
 
 	## 给定索引的特定偏移处的是否是段落边界，偏移索引正数代表向右偏移，负数代表向左偏移，0代表不偏移，如果出现问题也将返回false
