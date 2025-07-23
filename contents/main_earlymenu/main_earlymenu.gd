@@ -24,6 +24,7 @@ class_name Main_EarlyMenu
 @onready var n_line_edit_game_location: LineEdit = $TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/LineEditGameLocation as LineEdit
 @onready var n_line_edit_pack_location: LineEdit = $TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/LineEditPackLocation as LineEdit
 @onready var n_log_text: RichTextLabel = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/Log/LogText as RichTextLabel
+@onready var n_open_zip_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation/OpenZIPButton as Button
 @onready var n_operation_install_reinstall_checkbox: CheckBox = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ReinstallCheck as CheckBox
 @onready var n_operation_install_confirm_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall as Button
 @onready var n_operation_install_option_difficults_container: VBoxContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer/DifficultsNodesContainer as VBoxContainer
@@ -64,6 +65,9 @@ const DIFFICULT_BUTTON_GROUP: ButtonGroup = preload("res://contents/main_earlyme
 ## 百川安装器
 static var installer: BaiChuanInstaller = BaiChuanInstaller.new()
 
+## 使用捆绑式安装包
+static var use_builtin_pack: bool = true
+
 ## 是否已同意EULA
 var is_eula_agreed: bool = false:
 	set(value):
@@ -101,6 +105,15 @@ func _ready() -> void:
 		n_tab_container.set_tab_title(i, TabsNames[i]) #设置标签栏上标签的标题
 	for i in n_installer_tabs.size(): #按索引遍历安装器标签列表
 		n_installer_tab_container.set_tab_title(i, InstallerOperationTabsNames[i]) #设置安装器标签栏上标签的标题
+	if (use_builtin_pack):
+		n_line_edit_pack_location.editable = false
+		n_line_edit_pack_location.placeholder_text = "因安全原因当前已禁用，请使用捆绑式安装包"
+		n_open_zip_button.disabled = true
+		var load_path: String = OS.get_executable_path().get_base_dir().path_join("pack")
+		print("加载捆绑式安装包：", load_path)
+		load_install_pack(load_path)
+		place_install_option_nodes()
+		update_install_confirm_button()
 
 ## 程序关闭方法，此方法中要写临时目录的释放行为
 func quit_program() -> void:
@@ -175,28 +188,49 @@ func refresh_game_info() -> void:
 	n_state_info_text.text = text.format([text_version_verify, text_bepinex_exist, text_qmods_exist, text_baichuan_installed])
 
 ## 加载安装包
-func load_install_pack() -> void:
+func load_install_pack(pack_path: String) -> void:
 	is_pack_load_success = false
-	n_line_edit_pack_location.text = n_line_edit_pack_location.text.trim_prefix("\"").trim_suffix("\"") #去除引号
-	if (not n_line_edit_pack_location.text.is_absolute_path()): #如果输入不是可用的绝对路径
+	pack_path = pack_path.trim_prefix("\"").trim_suffix("\"") #去除引号
+	if (not use_builtin_pack):
+		n_line_edit_pack_location.text = pack_path
+	if (not pack_path.is_absolute_path()): #如果输入不是可用的绝对路径
 		n_mod_pack_tip_text.text = "需填写一个指向安装包的绝对路径"
 		n_mod_pack_tip_text.modulate = Color.RED
 		refresh_log() #刷新日志
 		return
-	if (not FileAccess.file_exists(n_line_edit_pack_location.text)): #如果文件不存在
-		n_mod_pack_tip_text.text = "路径指向的文件不存在或不可见"
-		n_mod_pack_tip_text.modulate = Color.RED
-		refresh_log() #刷新日志
-		return
-	meta_report = installer.load_new_pack(n_line_edit_pack_location.text)
-	if (meta_report == null): #如果加载失败
-		n_mod_pack_tip_text.text = "安装包加载失败"
-		n_mod_pack_tip_text.modulate = Color.RED
-		refresh_log() #刷新日志
-		return
-	is_pack_load_success = true
-	n_mod_pack_tip_text.text = "安装包就绪: 版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
-	n_mod_pack_tip_text.modulate = Color.GREEN
+	match (use_builtin_pack):
+		true:
+			if (not DirAccess.dir_exists_absolute(pack_path)): #如果文件夹不存在
+				n_mod_pack_tip_text.text = "捆绑式安装包丢失"
+				n_mod_pack_tip_text.modulate = Color.RED
+				refresh_log() #刷新日志
+				return
+			meta_report = installer.load_new_pack(pack_path, false)
+			if (meta_report == null): #如果加载失败
+				n_mod_pack_tip_text.text = "捆绑式安装包加载失败"
+				if (use_builtin_pack):
+					n_mod_pack_tip_text.text = "捆绑式安装包加载失败"
+				n_mod_pack_tip_text.modulate = Color.RED
+				refresh_log() #刷新日志
+				return
+			is_pack_load_success = true
+			n_mod_pack_tip_text.text = "捆绑式安装包就绪：版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
+			n_mod_pack_tip_text.modulate = Color.GREEN
+		false:
+			if (not FileAccess.file_exists(pack_path)): #如果文件不存在
+				n_mod_pack_tip_text.text = "路径指向的文件不存在或不可见"
+				n_mod_pack_tip_text.modulate = Color.RED
+				refresh_log() #刷新日志
+				return
+			meta_report = installer.load_new_pack(pack_path, true)
+			if (meta_report == null): #如果加载失败
+				n_mod_pack_tip_text.text = "安装包加载失败"
+				n_mod_pack_tip_text.modulate = Color.RED
+				refresh_log() #刷新日志
+				return
+			is_pack_load_success = true
+			n_mod_pack_tip_text.text = "安装包就绪: 版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
+			n_mod_pack_tip_text.modulate = Color.GREEN
 	refresh_log() #刷新日志
 
 ## 放置安装选项节点
@@ -303,7 +337,7 @@ func installer_auto_find_game() -> void:
 
 ## 安装器/解压并加载安装包
 func installer_unpack_and_load_install_pack() -> void:
-	load_install_pack()
+	load_install_pack(n_line_edit_pack_location.text)
 	place_install_option_nodes()
 	update_install_confirm_button()
 

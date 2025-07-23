@@ -20,4 +20,7 @@ func search_game_path_on_drives(drivers_names: PackedStringArray) -> PackedStrin
 			var absolute_path: String = driver_name + game_path #合成为绝对路径
 			if (FileAccess.file_exists(absolute_path)): #如果文件存在
 				result.append(absolute_path) #将当前绝对路径添加到结果列表
+	var same_dir_path: String = OS.get_executable_path().get_base_dir().path_join("Subnautica.exe")
+	if (FileAccess.file_exists(same_dir_path)):
+		result.append(same_dir_path)
 	return result

@@ -52,6 +52,14 @@ func open_new(pack_path: String, logger: BaiChuanInstaller_Logger) -> bool:
 		file.store_buffer(zip_reader.read_file(path)) #从压缩包读出内容存储在文件中
 	return true
 
+## 以无需解压缩的方式开启新包，会将dir_access打开到给定pack_path，如果失败或发生问题将返回false，成功返回true。尽管发生问题，dir_access仍然会被覆盖
+func open_new_without_unzip(pack_path: String, logger: BaiChuanInstaller_Logger) -> bool:
+	dir_access = DirAccess.open(pack_path)
+	if (dir_access == null):
+		logger.log_error("PackAccess: 在以无需解压缩的方式打开新包时发生错误，加载安装包将中止")
+		return false
+	return true
+
 ## 解析pack.json，当发生问题时返回false，一切正常返回true。尽管发生问题，pack_meta成员仍然会被覆盖
 func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 	## 00基本解析

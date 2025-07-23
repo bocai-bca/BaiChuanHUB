@@ -141,6 +141,7 @@ emoji_menu_enabled = false
 
 [node name="OpenZIPButton" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
 layout_mode = 2
+disabled = true
 text = "解压并加载"
 
 [node name="ModPackTipText" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer"]

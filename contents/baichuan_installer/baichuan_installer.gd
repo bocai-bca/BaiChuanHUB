@@ -115,12 +115,17 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 	return result
 
 ## 加载新安装包，失败时返回null
-func load_new_pack(pack_path: String) -> PackMetaReport:
+func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 	logger.log_info("开始尝试加载安装包: " + pack_path)
 	#pack_path = pack_path.trim_prefix("\"").trim_suffix("\"") #去除路径的首尾引号
-	if (not pack_access.open_new(pack_path, logger)): #打开安装包并检查是否成功
-		logger.log_error("因发生错误而中止安装包加载")
-		return null
+	if (need_unzip):
+		if (not pack_access.open_new(pack_path, logger)): #打开安装包并检查是否成功
+			logger.log_error("因发生错误而中止安装包加载")
+			return null
+	else:
+		if (not pack_access.open_new_without_unzip(pack_path, logger)):
+			logger.log_error("因发生错误而中止安装包加载")
+			return null
 	logger.log_info("已打开压缩包")
 	if (not pack_access.parse_meta(logger)): #解析元数据并检查是否成功
 		logger.log_error("因发生错误而中止安装包加载")
