@@ -237,7 +237,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		if (DirAccess.dir_exists_absolute(addon_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join(pack_access.pack_meta.difficults_list[install_difficult].path))): #如果存在对应的难度数据
 			print("附属包", install_addon,"存在匹配难度数据")
 			BaiChuanInstaller_DirRecurs.copy_recursive(addon_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join(pack_access.pack_meta.difficults_list[install_difficult].path), absolute_path, logger)
-	## 01按顺序进行安装脚本
+	## 01按顺序解析安装脚本
 	var difficult_script: BaiChuanInstaller_ScriptHandler.ScriptParsed = script_handler.parse_script(pack_access.get_install_script_absolute_path(install_difficult), pack_access, logger, false)
 	if (difficult_script == null):
 		logger.log_warn("安装流程因难度安装脚本解析出错中止")

@@ -1,0 +1,89 @@
+//双斜杠开头为注释，但实际上bcis不支持注释，这里只是为了演示
+//并且bcis不支持空行，所有命令必须紧密挨在一起，这里只是为了方便看
+
+// ====================
+
+//假如我们有一个引用名叫demo的mod(引用名在pack.json中定义，可以含空格、中文、数字)
+
+//有个q命令，它的全称是qmods，我们在bcis里只要写简称(全称是无效的)
+//把demo添加到QMods中我们需要使用q命令，后面跟随这个mod的引用名
+//⬇️作用：添加引用名为demo的模组到QMods
+q demo
+
+//同样有个与q对应的命令，是BepInEx的，简称b
+//把demo添加到BepInEx/plugins中我们需要使用b命令，语法和q一样
+//⬇️作用：添加引用名为demo的模组到BepInEx/plugins
+b demo
+
+//另外，如果模组的引用名包含空格，我们需要用双引号把它包起来，不然安装器会把引用名它解读为两个段落
+//⬇️错误示范，安装器会按引用名space寻找模组，如果找到了将安装该名为space的模组
+q space name
+//⬇️正确示范，安装包会正确地寻找引用名为space name的模组
+q "space name"
+
+// ====================
+
+//有时我们需要比安装器自动处理更场景化、特殊的处理，比如处理配置文件相关的文件
+
+//这时我们可能需要手动地从安装包复制文件，我们将会用到cf，它的全称是copyfile
+//cf带有两个子参数，分别是p和g，即从包中复制到游戏和从游戏中复制到游戏
+
+//举个例子，我们想从安装包的data/custom中复制一个名为test.txt的文件到QMods/CustomCraft2SML/WorkingFiles
+//注意：所有代表路径的参数建议使用双引号包起来，并且请尽可能使用正斜杠(/)，而不是反斜杠(\)，尽管Windows会默认使用反斜杠，在bcis中使用反斜杠可能会引起问题
+//不要在路径参数以斜杠开头，命令执行器在拼接路径时将自动补充这个斜杠，手动提前写上会出事
+
+//注意：源参数和目的地参数都是文件路径
+
+//⬇️作用：将安装包中的data/custom/test.txt文件复制到Subnautica/QMods/CustomCraft2SML/WorkingFiles目录下
+cf p "data/custom/test.txt" "QMods/CustomCraft2SML/WorkingFiles/test.txt"
+
+//如果我们想从游戏内复制到游戏内呢
+
+//⬇️作用：将Subnautica/BaiChuan/test.txt文件复制到Subnautica/QMods/CustomCraft2SML/WorkingFiles目录下
+cf g "BaiChuan/test.txt" "QMods/CustomCraft2SML/WorkingFiles/test.txt"
+
+//注意：当cf的复制目的地已经存在同名文件时，命令执行器会进行覆盖操作
+
+// ====================
+
+//与cf这种复制文件对应的是cd，它的全称是copydir，即复制目录，而语法上是差不多的
+//注意：是复制目录到另一处位置，而不是目录中的内容，如果需要复制一个目录中的所有内容到另一处，需要手动一个个地用cf，但有一个小技巧，cd命令在复制到目的地目录时如果已经存在，将进行文件夹合并，并且会递归地在内部继续合并
+
+//注意：源参数和目的地参数都是目录路径
+
+//⬇️作用：将安装包中的data/custom/WorkingFiles目录复制到Subnautica/QMods/CustomCraft2SML目录，可以实现将源目录下的文件全都复制到CustomCraft2SML/WorkingFiles的效果
+cd p "data/custom/WorkingFiles" "QMods/CustomCraft2SML"
+
+//⬇️作用：将Subnautica/BaiChuan/WorkingFiles目录复制到Subnautica/QMods/CustomCraft2SML目录
+cd g "BaiChuan/WorkingFiles" "QMods/CustomCraft2SML"
+
+// ====================
+
+//当我们想要在游戏内删除文件或目录怎么办，答案是使用d命令，它的全称是delete
+//注意：目标参数可以是文件路径也可以是目录路径
+
+//⬇️作用：删除Subnautica/winhttp.dll文件
+d "winhttp.dll"
+
+//⬇️作用：删除Subnautica/QMods目录
+d "QMods"
+
+//如果我们想要删光一个目录中的所有内容但保持目录本身存在怎么办，答案是使用c命令，它的全称是clear
+//注意：目标参数需要是目录路径
+
+//⬇️作用：清空Subnautica/QMods目录
+c "QMods"
+
+// ====================
+
+// 注意：无论是cf、cd、d、c，都只能对游戏路径进行操作，无法在安装包内增删文件
+
+// ====================
+
+//一段演示：
+b "UnityExplorer"
+q "cc2"
+q "diad"
+q "fcs"
+q "远古回归"
+cd p "data/custom/WorkingFiles" "QMods/CustomCraft2SML"
