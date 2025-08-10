@@ -89,6 +89,8 @@ var install_option_difficult_current: int = -1
 var install_option_addons_current: PackedInt32Array = []
 ## 安装选项重新安装
 var install_option_reinstall: bool = false
+## 安装器是否正在执行某个操作(如安装、卸载)
+var is_operating: bool = false
 
 func _notification(what: int) -> void:
 	match (what):
@@ -115,8 +117,18 @@ func _ready() -> void:
 		place_install_option_nodes()
 		update_install_confirm_button()
 
+func _physics_process(_delta: float) -> void:
+	if (is_operating):
+		refresh_log()
+		if (not installer.thread.is_alive()):
+			is_operating = false
+			n_operation_install_confirm_button.disabled = false
+			n_operation_uninstall_confirm_button.disabled = false
+			refresh_game_info()
+
 ## 程序关闭方法，此方法中要写临时目录的释放行为
 func quit_program() -> void:
+	installer.thread.wait_to_finish()
 	get_tree().quit()
 
 ## 隐藏游戏状态信息，需指定目标状态
@@ -295,6 +307,8 @@ func update_install_addons_checkboxes_disable() -> void:
 
 ## 更新安装确认按钮
 func update_install_confirm_button() -> void:
+	if (is_operating):
+		return
 	if (not is_game_path_ready): #如果游戏路径尚未就绪
 		n_operation_install_confirm_button.disabled = true
 		n_operation_install_confirm_button.text = "请先设置游戏位置以确定安装位置"
@@ -354,16 +368,20 @@ func installer_install_reinstall_checkbox() -> void:
 
 ## 安装器/安装/确认安装
 func installer_install_confirm() -> void:
+	is_operating = true
+	n_operation_install_confirm_button.disabled = true
 	if (install_option_difficult_current != -1):
-		installer.install(n_line_edit_game_location.text.get_base_dir(), install_option_difficult_current, install_option_addons_current, install_option_reinstall)
-	refresh_game_info()
-	refresh_log() #刷新日志
+		installer.multiple_threads_install(n_line_edit_game_location.text.get_base_dir(), install_option_difficult_current, install_option_addons_current, install_option_reinstall)
+	#refresh_game_info()
+	#refresh_log() #刷新日志
 
 ## 安装器/卸载/确认卸载
 func installer_uninstall_confirm() -> void:
-	installer.uninstall(n_line_edit_game_location.text.get_base_dir(), n_operation_uninstall_keep_framework_checkbox.button_pressed)
-	refresh_game_info()
-	refresh_log() #刷新日志
+	is_operating = true
+	n_operation_uninstall_confirm_button.disabled = true
+	installer.multiple_threads_uninstall(n_line_edit_game_location.text.get_base_dir(), n_operation_uninstall_keep_framework_checkbox.button_pressed)
+	#refresh_game_info()
+	#refresh_log() #刷新日志
 
 ## 安装器/验证/开始验证
 func installer_verify_start() -> void:
@@ -379,6 +397,8 @@ func installer_gamepath_submit(new_text: String) -> void:
 		update_install_confirm_button()
 		refresh_log() #刷新日志
 		return
+	new_text = new_text.trim_prefix("\"").trim_suffix("\"") #去除引号
+	n_line_edit_game_location.text = new_text
 	if (not new_text.is_absolute_path() or new_text.get_file() != "Subnautica.exe"): #如果内容不是绝对路径或不是指向Subnautica.exe的路径
 		is_game_path_ready = false
 		n_game_tip_text.text = "需填写一个指向Subnautica.exe的绝对路径"
@@ -427,5 +447,7 @@ func installer_packpath_lose_focus() -> void:
 
 ## 刷新日志，在任何(可能)能够影响日志的菜单元素被触发以后均调用此方法，由其他连接了信号的方法调用
 func refresh_log() -> void:
+	installer.mutex.lock()
 	n_log_text.text = installer.log_string #将安装器的日志内容传递到本实例
+	installer.mutex.unlock()
 #endregion

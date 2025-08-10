@@ -7,8 +7,12 @@ const SUBNAUTICA_EXE_MD5: PackedStringArray = [
 	"0fc9d3196024f686cb9cfee074fbf409",
 ]
 
+## 多线程线程实例
+var thread: Thread = Thread.new()
+## 多线程读写互斥锁
+var mutex: Mutex = Mutex.new()
 ## 日志输出实例
-var logger: BaiChuanInstaller_Logger = BaiChuanInstaller_Logger.new()
+var logger: BaiChuanInstaller_Logger = BaiChuanInstaller_Logger.new(mutex)
 ## 日志
 var log_string: String:
 	get:
@@ -157,6 +161,15 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 				addon_meta.support_difficults.append(find_index) #将当前获得的索引添加到元数据
 		result.addons.append(addon_meta)
 	return result
+
+## 开启多线程安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，不能返回成功与否
+func multiple_threads_install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> void:
+	if (thread.is_alive()):
+		logger.log_error("安装器繁忙，将拒绝新的安装任务")
+		return
+	if (thread.is_started()):
+		thread.wait_to_finish()
+	thread.start(install.bind(absolute_path, install_difficult, install_addons, reinstall), Thread.PRIORITY_HIGH)
 
 ## 安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，并返回成功与否
 func install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> bool:
@@ -307,6 +320,15 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	## /01
 	logger.log_info("安装流程结束")
 	return true
+
+## 开启多线程卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置，不能返回成功与否
+func multiple_threads_uninstall(absolute_path: String, keep_framework: bool) -> void:
+	if (thread.is_alive()):
+		logger.log_error("安装器繁忙，将拒绝新的卸载任务")
+		return
+	if (thread.is_started()):
+		thread.wait_to_finish()
+	thread.start(uninstall.bind(absolute_path, keep_framework), Thread.PRIORITY_HIGH)
 
 ## 卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置，并返回成功与否
 func uninstall(absolute_path: String, keep_framework: bool) -> bool:
