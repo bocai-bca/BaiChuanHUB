@@ -67,10 +67,11 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 		logger.log_error("PackAccess: 找不到包元数据，解析将中止")
 		return false
 	pack_meta = PackMeta.new() #新建PackMeta实例
-	var parsed: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir_access.get_current_dir().path_join(ROOT_PACK_META))) as Dictionary #尝试解析pack.json
-	if (parsed == null): #json解析失败时会返回null
+	var parsing = JSON.parse_string(FileAccess.get_file_as_string(dir_access.get_current_dir().path_join(ROOT_PACK_META))) #尝试解析pack.json
+	if (parsing == null): #json解析失败时会返回null
 		logger.log_error("PackAccess: 包元数据JSON解析失败，解析将中止")
 		return false
+	var parsed: Dictionary = parsing as Dictionary
 	if (not (parsed.has("version") and parsed.has("version_name") and parsed.has("fork_version") and parsed.has("difficults") and parsed.has("mods") and parsed.has("addons"))):
 		logger.log_error("PackAccess: 包元数据不完整，解析将中止")
 		return false
