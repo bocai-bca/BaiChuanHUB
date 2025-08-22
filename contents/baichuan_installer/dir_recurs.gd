@@ -29,14 +29,16 @@ static func copy_recursive(source_dir: String, target_dir: String, logger: BaiCh
 ## 删除一个文件或递归地删除一个目录，返回成功与否
 static func delete_recursive(target: String, logger: BaiChuanInstaller_Logger) -> bool:
 	if (FileAccess.file_exists(target)):
-		if (DirAccess.remove_absolute(target) != OK):
-			logger.log_error("DirRecurs: 删除文件时出错：" + target)
+		var err: Error = DirAccess.remove_absolute(target)
+		if (err != OK):
+			logger.log_error("DirRecurs: 删除文件时出错：" + target + "，错误代码：" + str(err))
 			return false
 		return true
 	elif (DirAccess.dir_exists_absolute(target)):
 		if (clear_recursive(target, logger)):
-			if (DirAccess.remove_absolute(target) != OK):
-				logger.log_error("DirRecurs: 删除目录时出错：" + target)
+			var err: Error = DirAccess.remove_absolute(target)
+			if (err != OK):
+				logger.log_error("DirRecurs: 删除目录时出错：" + target + "，错误代码：" + str(err))
 				return false
 			return true
 		logger.log_error("DirRecurs: 清空目录时出错：" + target)
@@ -53,16 +55,20 @@ static func clear_recursive(target_dir: String, logger: BaiChuanInstaller_Logger
 	for file in DirAccess.get_files_at(target_dir):
 		var file_path: String = target_dir.path_join(file)
 		if (FileAccess.file_exists(file_path)):
-			success = success and DirAccess.remove_absolute(file_path) == OK
+			var err: Error = DirAccess.remove_absolute(file_path)
+			if (err != OK):
+				logger.log_error("DirRecues: 删除文件时出错：" + file_path + "，错误代码：" + str(err))
+				success = false
 			continue
 		logger.log_warn("DirRecurs: 文件在删除过程中丢失：" + file_path)
 	for dir in DirAccess.get_directories_at(target_dir):
 		var dir_path: String = target_dir.path_join(dir)
 		if (DirAccess.dir_exists_absolute(dir_path)):
 			success = success and clear_recursive(dir_path, logger)
-			if (DirAccess.remove_absolute(dir_path) != OK):
+			var err: Error = DirAccess.remove_absolute(dir_path)
+			if (err != OK):
 				success = false
-				logger.log_error("DirRecurs: 删除目录时出错：" + dir_path)
+				logger.log_error("DirRecurs: 删除目录时出错：" + dir_path + "，错误代码：" + str(err))
 			continue
 		logger.log_warn("DirRecurs: 目录在删除过程中丢失：" + dir_path)
 	return success

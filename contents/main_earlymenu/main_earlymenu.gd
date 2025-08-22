@@ -109,7 +109,7 @@ func _ready() -> void:
 		n_installer_tab_container.set_tab_title(i, InstallerOperationTabsNames[i]) #设置安装器标签栏上标签的标题
 	if (use_builtin_pack):
 		n_line_edit_pack_location.editable = false
-		n_line_edit_pack_location.placeholder_text = "因安全原因当前已禁用，请使用捆绑式安装包"
+		n_line_edit_pack_location.placeholder_text = "因安全原因已禁止手动指定安装包，将自动使用捆绑式安装包"
 		n_open_zip_button.disabled = true
 		var load_path: String = OS.get_executable_path().get_base_dir().path_join("pack")
 		print("加载捆绑式安装包：", load_path)
@@ -340,6 +340,7 @@ func eula_reject() -> void:
 func eula_agree() -> void:
 	is_eula_agreed = true #将EULA已同意设为true
 	n_eula_agree_bar.visible = false #使EULA同意栏不可见
+	n_tab_container.current_tab = Tabs.INSTALLER #将主选项卡焦点切换到安装器
 
 ## 安装器/自动寻找游戏位置
 func installer_auto_find_game() -> void:
