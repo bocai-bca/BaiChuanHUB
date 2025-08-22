@@ -57,14 +57,14 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 	var result: GameStateReport = GameStateReport.new() #新建结果实例
 	var root_dir: DirAccess = DirAccess.open(absolute_path.get_base_dir()) #打开给定的绝对路径的所在目录为DirAccess
 	if (root_dir == null): #如果DirAccess打开失败
-		logger.log_error("DirAccess打开失败")
+		logger.log_error("BaiChuanInstaller: DirAccess打开失败")
 		result.game_version_verify = GameStateReport.GameVersionVerify.ERROR
 		result.bepinex_installed = GameStateReport.BepInExInstalled.ERROR
 		result.is_qmods_exist = false
 		result.baichuan_installed = GameStateReport.BaiChuanInstalled.ERROR
 		return result
 	if (absolute_path.get_file() != "Subnautica.exe"): #如果给定的路径不是指向Subnautica.exe的
-		logger.log_error("指定的路径不指向Subnautica.exe")
+		logger.log_error("BaiChuanInstaller: 指定的路径不指向Subnautica.exe")
 		result.game_version_verify = GameStateReport.GameVersionVerify.NOT_FOUND
 	if (verify_md5(absolute_path)): #验证md5，若通过
 		#logger.log_info("md5验证通过")
@@ -124,19 +124,19 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 	#pack_path = pack_path.trim_prefix("\"").trim_suffix("\"") #去除路径的首尾引号
 	if (need_unzip):
 		if (not pack_access.open_new(pack_path, logger)): #打开安装包并检查是否成功
-			logger.log_error("因发生错误而中止安装包加载")
+			logger.log_error("BaiChuanInstaller: 因发生错误而中止安装包加载")
 			return null
 	else:
 		if (not pack_access.open_new_without_unzip(pack_path, logger)):
-			logger.log_error("因发生错误而中止安装包加载")
+			logger.log_error("BaiChuanInstaller: 因发生错误而中止安装包加载")
 			return null
 	logger.log_info("已打开压缩包")
 	if (not pack_access.parse_meta(logger)): #解析元数据并检查是否成功
-		logger.log_error("因发生错误而中止安装包加载")
+		logger.log_error("BaiChuanInstaller: 因发生错误而中止安装包加载")
 		return null
 	logger.log_info("安装包元数据解析完成")
 	if (not pack_access.parse_contents(logger)): #解析包内容和验证脚本并检查是否成功
-		logger.log_error("因发生错误而中止安装包加载")
+		logger.log_error("BaiChuanInstaller: 因发生错误而中止安装包加载")
 		return null
 	logger.log_info("安装包内容解析已完成")
 	var result: PackMetaReport = PackMetaReport.new()
@@ -165,7 +165,7 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 ## 开启多线程安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，不能返回成功与否
 func multiple_threads_install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> void:
 	if (thread.is_alive()):
-		logger.log_error("安装器繁忙，将拒绝新的安装任务")
+		logger.log_error("BaiChuanInstaller: 安装器繁忙，将拒绝新的安装任务")
 		return
 	if (thread.is_started()):
 		thread.wait_to_finish()
@@ -177,14 +177,14 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	script_handler.install_path = absolute_path
 	var dir_access: DirAccess = DirAccess.open(absolute_path) #打开安装目录为DirAccess
 	if (dir_access == null): #如果为null，说明出错
-		logger.log_error("打开目录失败：" + absolute_path)
-		logger.log_error("安装过程出现问题而中止")
+		logger.log_error("BaiChuanInstaller: 打开目录失败：" + absolute_path)
+		logger.log_error("BaiChuanInstaller: 安装过程出现问题而中止")
 		return false
 	var need_uninstall: bool = false
 	var game_state: GameStateReport = game_state_detect(absolute_path.path_join("Subnautica.exe"))
 	match (game_state.bepinex_installed):
 		GameStateReport.BepInExInstalled.ERROR:
-			logger.log_error("检测BepInEx状态时发生错误")
+			logger.log_error("BaiChuanInstaller: 检测BepInEx状态时发生错误")
 			return false
 		GameStateReport.BepInExInstalled.NO:
 			pass
@@ -205,7 +205,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 				return false
 	match (game_state.baichuan_installed):
 		GameStateReport.BaiChuanInstalled.ERROR:
-			logger.log_error("检测百川安装状态时发生错误")
+			logger.log_error("BaiChuanInstaller: 检测百川安装状态时发生错误")
 			return false
 		GameStateReport.BaiChuanInstalled.NO:
 			pass
@@ -214,21 +214,21 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 				logger.log_info("发现百川安装迹象，将进行重新安装")
 				need_uninstall = true
 			else:
-				logger.log_error("发现存在百川安装迹象，若希望进行重新安装百川，请勾选\"重新安装\"。另外，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				logger.log_error("BaiChuanInstaller: 发现存在百川安装迹象，若希望进行重新安装百川，请勾选\"重新安装\"。另外，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
 				return false
 	if (need_uninstall):
 		## 重新安装
 		uninstall(absolute_path, false)
 	## 00数据检查
 	if (not (0 <= install_difficult and install_difficult < pack_access.pack_meta.difficults_list.size())): #如果给定的安装难度索引不在有效范围内
-		logger.log_error("不存在指定的安装难度索引：" + str(install_difficult))
-		logger.log_error("安装过程出现问题而中止")
+		logger.log_error("BaiChuanInstaller: 不存在指定的安装难度索引：" + str(install_difficult))
+		logger.log_error("BaiChuanInstaller: 安装过程出现问题而中止")
 		return false
 	for install_addon in install_addons: #遍历所有附属包索引
 		if (0 <= install_addon and install_addon < pack_access.pack_meta.addons_list.size()): #如果存在给定索引
 			continue
-		logger.log_error("不存在指定的安装附属包索引：" + str(install_addon))
-		logger.log_error("安装过程出现问题而中止")
+		logger.log_error("BaiChuanInstaller: 不存在指定的安装附属包索引：" + str(install_addon))
+		logger.log_error("BaiChuanInstaller: 安装过程出现问题而中止")
 		return false
 	## /00 从此处起可确保传入的安装路径可访问、难度索引可用、附属包索引可用
 	var pack_dir: String = pack_access.dir_access.get_current_dir()
@@ -275,7 +275,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	logger.log_info("正在执行难度安装脚本")
 	for command_index in difficult_script.commands_splitted.size(): #遍历难度安装脚本的命令
 		if (not script_handler.run_command(difficult_script.commands_splitted[command_index], -1, pack_access, logger)): #执行命令并检查是否成功
-			logger.log_error("难度安装脚本执行过程出现问题，发生于：" + str(command_index))
+			logger.log_error("BaiChuanInstaller: 难度安装脚本执行过程出现问题，发生于：" + str(command_index))
 			logger.log_warn("安装流程中止")
 			return false
 	##  /02
@@ -284,7 +284,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		logger.log_info("正在执行附属包安装脚本：" + str(addon_index))
 		for command_index in addons_scripts[addon_index].commands_splitted.size(): #遍历当前附属包安装脚本的命令
 			if (not script_handler.run_command(addons_scripts[addon_index].commands_splitted[command_index], addon_index, pack_access,logger)): #执行命令并检查是否成功
-				logger.log_error("附属包安装脚本执行过程出现问题，发生于：" + str(command_index))
+				logger.log_error("BaiChuanInstaller: 附属包安装脚本执行过程出现问题，发生于：" + str(command_index))
 				logger.log_warn("安装流程中止")
 				return false
 	##  /03
@@ -299,7 +299,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	uninstall_script_content += FileAccess.get_file_as_string(pack_access.get_uninstall_script_absolute_path(install_difficult))
 	var uninstall_script_file: FileAccess = FileAccess.open(absolute_path.path_join(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME), FileAccess.WRITE)
 	if (uninstall_script_file == null):
-		logger.log_error("打开卸载脚本失败")
+		logger.log_error("BaiChuanInstaller: 打开卸载脚本失败")
 		logger.log_warn("安装流程中止")
 		return false
 	uninstall_script_file.store_string(uninstall_script_content)
@@ -307,7 +307,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	## 05放置安装元数据
 	var install_meta_file: FileAccess = FileAccess.open(absolute_path.path_join(BaiChuanInstaller_PackAccess.INSTALLED_META), FileAccess.WRITE)
 	if (install_meta_file == null):
-		logger.log_error("打开安装元数据失败")
+		logger.log_error("BaiChuanInstaller: 打开安装元数据失败")
 		logger.log_warn("安装流程中止")
 		return false
 	var install_meta_data: Dictionary[String, Variant] = {
@@ -324,7 +324,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 ## 开启多线程卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置，不能返回成功与否
 func multiple_threads_uninstall(absolute_path: String, keep_framework: bool) -> void:
 	if (thread.is_alive()):
-		logger.log_error("安装器繁忙，将拒绝新的卸载任务")
+		logger.log_error("BaiChuanInstaller: 安装器繁忙，将拒绝新的卸载任务")
 		return
 	if (thread.is_started()):
 		thread.wait_to_finish()
@@ -342,18 +342,18 @@ func uninstall(absolute_path: String, keep_framework: bool) -> bool:
 			return false
 		for command_index in uninstall_script.commands_splitted.size(): #遍历难度安装脚本的命令
 			if (not script_handler.run_command(uninstall_script.commands_splitted[command_index], -1, null, logger)): #执行命令并检查是否成功
-				logger.log_error("卸载脚本执行过程出现问题，发生于：" + str(command_index))
+				logger.log_error("BaiChuanInstaller: 卸载脚本执行过程出现问题，发生于：" + str(command_index))
 				logger.log_warn("卸载流程中止")
 				return false
 		## /00
 		## 01移除卸载脚本及安装元数据
 		if (DirAccess.remove_absolute(absolute_path.path_join(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME)) != OK):
-			logger.log_error("删除卸载脚本时发生问题")
+			logger.log_error("BaiChuanInstaller: 删除卸载脚本时发生问题")
 			logger.log_warn("卸载流程中止")
 			return false
 		if (FileAccess.file_exists(absolute_path.path_join(BaiChuanInstaller_PackAccess.INSTALLED_META))):
 			if (DirAccess.remove_absolute(absolute_path.path_join(BaiChuanInstaller_PackAccess.INSTALLED_META))):
-				logger.log_error("删除安装元数据时发生问题")
+				logger.log_error("BaiChuanInstaller: 删除安装元数据时发生问题")
 				logger.log_warn("卸载流程中止")
 				return false
 		else:
@@ -371,7 +371,7 @@ func uninstall(absolute_path: String, keep_framework: bool) -> bool:
 				if (DirAccess.dir_exists_absolute(path)):
 					print("正在删除：", path)
 					if (not BaiChuanInstaller_DirRecurs.delete_recursive(path, logger)):
-						logger.log_error("删除目录时出错：" + dir_need_delete)
+						logger.log_error("BaiChuanInstaller: 删除目录时出错：" + dir_need_delete)
 						success = false
 			var misc_files: PackedStringArray = [
 				"doorstop_config.ini",
@@ -383,8 +383,9 @@ func uninstall(absolute_path: String, keep_framework: bool) -> bool:
 			for misc_file in misc_files:
 				var path: String = absolute_path.path_join(misc_file)
 				if (FileAccess.file_exists(path)):
-					if (not DirAccess.remove_absolute(path)):
-						logger.log_error("删除文件时出错：" + misc_file)
+					var err: Error = DirAccess.remove_absolute(path)
+					if (err != OK):
+						logger.log_error("BaiChuanInstaller: 删除文件时出错：" + misc_file + "，错误代码：" + str(err))
 						success = false
 			## /02
 			if (success):
