@@ -193,7 +193,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 				logger.log_info("发现存在BepInEx，将进行覆盖")
 				need_uninstall = true
 			else:
-				logger.log_warn("发现存在BepInEx，请在安装前还原到纯净原版游戏状态。若执意继续安装或希望进行重新安装百川，请勾选\"重新安装\"，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				logger.log_warn("发现存在BepInEx，请在安装前还原到纯净原版游戏状态。若执意继续安装或希望更新百川或更换难度，请勾选\"覆盖现有安装\"。勾选后安装器会跳过安全检查，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
 				return false
 	match (game_state.is_qmods_exist):
 		true:

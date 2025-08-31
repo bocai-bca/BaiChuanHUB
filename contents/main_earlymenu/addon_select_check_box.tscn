@@ -1,8 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://d063x0yxa21c8"]
+[gd_scene load_steps=6 format=3 uid="uid://d063x0yxa21c8"]
 
+[ext_resource type="StyleBox" uid="uid://cfbg411mxcqtg" path="res://contents/main_pdamenu/stylebox_focus_for_installer_select_checks.tres" id="1_7ddlw"]
+[ext_resource type="StyleBox" uid="uid://cxbggvp8i807f" path="res://contents/main_pdamenu/stylebox_hover_for_installer_select_checks.tres" id="1_378t0"]
 [ext_resource type="Script" uid="uid://cgioluuo7uv0t" path="res://contents/main_earlymenu/addon_select_check_box.gd" id="1_j16pn"]
+[ext_resource type="StyleBox" uid="uid://cwbljufi3afhf" path="res://contents/main_pdamenu/stylebox_disabled_for_installer_select_checks.tres" id="2_obopo"]
+[ext_resource type="StyleBox" uid="uid://ch5e8fdgvdueo" path="res://contents/main_pdamenu/stylebox_for_installer_select_checks.tres" id="5_obopo"]
 
 [node name="AddonSelectCheckBox" type="CheckBox"]
 offset_right = 24.0
 offset_bottom = 24.0
+mouse_default_cursor_shape = 2
+theme_override_styles/focus = ExtResource("1_7ddlw")
+theme_override_styles/disabled = ExtResource("2_obopo")
+theme_override_styles/hover_pressed = ExtResource("1_378t0")
+theme_override_styles/hover = ExtResource("1_378t0")
+theme_override_styles/pressed = ExtResource("5_obopo")
+theme_override_styles/normal = ExtResource("5_obopo")
 script = ExtResource("1_j16pn")

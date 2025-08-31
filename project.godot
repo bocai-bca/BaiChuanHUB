@@ -11,19 +11,26 @@ config_version=5
 [application]
 
 config/name="百川HUB"
-config/version="0.0.5"
-run/main_scene="uid://b6boxed5w0ujx"
+config/version="0.1.0"
+run/main_scene="uid://c6045b6mkhhyq"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="BCASoft/BaiChuanHUB"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 run/low_processor_mode=true
+boot_splash/bg_color=Color(0, 0, 0, 0)
+boot_splash/show_image=false
 config/icon="uid://ctrqsk5d45c8w"
 config/windows_native_icon="res://icon.ico"
 
 [display]
 
-window/size/viewport_width=1440
-window/size/viewport_height=720
+window/size/viewport_width=1280
+window/size/viewport_height=921
+window/size/resizable=false
+window/size/borderless=true
+window/size/transparent=true
+window/energy_saving/keep_screen_on=false
+window/per_pixel_transparency/allowed=true
 
 [physics]
 
@@ -31,5 +38,8 @@ common/physics_ticks_per_second=2
 
 [rendering]
 
+rendering_device/driver.windows="d3d12"
+rendering_device/fallback_to_vulkan=false
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+viewport/transparent_background=true

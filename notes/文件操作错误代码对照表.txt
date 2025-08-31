@@ -1,0 +1,116 @@
+enum Error:
+
+● OK = 0
+返回 Error 的方法会在没有错误发生时返回 OK。
+
+由于 OK 的值为 0，并且所有其他错误常数都是正整数，因此返回值也可以用于布尔检查。
+
+var error = method_that_returns_error()
+if error != OK:
+    printerr("失败！")
+
+# 或者也可以：
+if error:
+    printerr("还是失败！") 
+注意：许多函数不返回错误代码，但会将错误信息打印到标准输出。
+
+● FAILED = 1
+一般性错误。
+● ERR_UNAVAILABLE = 2
+不可用的错误。
+● ERR_UNCONFIGURED = 3
+未配置的错误。
+● ERR_UNAUTHORIZED = 4
+未经授权的错误。
+● ERR_PARAMETER_RANGE_ERROR = 5
+参数范围错误。
+● ERR_OUT_OF_MEMORY = 6
+内存不足（OOM）错误。
+● ERR_FILE_NOT_FOUND = 7
+文件：未找到错误。
+● ERR_FILE_BAD_DRIVE = 8
+文件：坏驱动器错误。
+● ERR_FILE_BAD_PATH = 9
+文件：错误的路径错误。
+● ERR_FILE_NO_PERMISSION = 10
+文件：无权限错误。
+● ERR_FILE_ALREADY_IN_USE = 11
+文件：已在使用错误。
+● ERR_FILE_CANT_OPEN = 12
+文件：无法打开错误。
+● ERR_FILE_CANT_WRITE = 13
+文件：无法写入错误。
+● ERR_FILE_CANT_READ = 14
+文件：无法读取错误。
+● ERR_FILE_UNRECOGNIZED = 15
+文件：未识别的错误。
+● ERR_FILE_CORRUPT = 16
+文件：损坏错误。
+● ERR_FILE_MISSING_DEPENDENCIES = 17
+文件：缺少依赖项错误。
+● ERR_FILE_EOF = 18
+文件：文件结束（EOF）错误。
+● ERR_CANT_OPEN = 19
+无法打开错误。
+● ERR_CANT_CREATE = 20
+无法创建错误。
+● ERR_QUERY_FAILED = 21
+查询失败错误。
+● ERR_ALREADY_IN_USE = 22
+已在使用中错误。
+● ERR_LOCKED = 23
+锁定错误。
+● ERR_TIMEOUT = 24
+超时错误。
+● ERR_CANT_CONNECT = 25
+无法连接错误。
+● ERR_CANT_RESOLVE = 26
+无法解决错误。
+● ERR_CONNECTION_ERROR = 27
+连接错误。
+● ERR_CANT_ACQUIRE_RESOURCE = 28
+无法获取资源错误。
+● ERR_CANT_FORK = 29
+无法分叉进程错误。
+● ERR_INVALID_DATA = 30
+无效数据错误。
+● ERR_INVALID_PARAMETER = 31
+无效参数错误。
+● ERR_ALREADY_EXISTS = 32
+已存在的错误。
+● ERR_DOES_NOT_EXIST = 33
+不存在的错误。
+● ERR_DATABASE_CANT_READ = 34
+数据库：读取错误。
+● ERR_DATABASE_CANT_WRITE = 35
+数据库：写入错误。
+● ERR_COMPILATION_FAILED = 36
+编译失败错误。
+● ERR_METHOD_NOT_FOUND = 37
+方法未找到错误。
+● ERR_LINK_FAILED = 38
+链接失败错误。
+● ERR_SCRIPT_FAILED = 39
+脚本失败错误。
+● ERR_CYCLIC_LINK = 40
+循环链接（导入循环）错误。
+● ERR_INVALID_DECLARATION = 41
+无效声明错误。
+● ERR_DUPLICATE_SYMBOL = 42
+符号重复错误。
+● ERR_PARSE_ERROR = 43
+解析错误。
+● ERR_BUSY = 44
+忙碌错误。
+● ERR_SKIP = 45
+跳过错误。
+● ERR_HELP = 46
+帮助错误。内部使用，用于将 --version 或 --help 作为选项传递给可执行文件的情况。
+
+● ERR_BUG = 47
+Bug 错误，由方法中的实现问题引起。
+
+注意：如果内置方法返回此代码，请在 GitHub 问题追踪器   上开一个问题。
+
+● ERR_PRINTER_ON_FIRE = 48
+打印机起火错误（这是个彩蛋，引擎中没有内置方法会返回此错误码）。

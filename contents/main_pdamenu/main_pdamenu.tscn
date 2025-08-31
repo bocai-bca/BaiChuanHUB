@@ -1,0 +1,80 @@
+[gd_scene load_steps=5 format=3 uid="uid://c6045b6mkhhyq"]
+
+[ext_resource type="Texture2D" uid="uid://bnjhrgtd08hoo" path="res://contents/main_pdamenu/PDA.png" id="1_15sf4"]
+[ext_resource type="Script" uid="uid://dlx6jm186x5bh" path="res://contents/main_pdamenu/main_pdamenu.gd" id="2_ht1jx"]
+[ext_resource type="PackedScene" uid="uid://b6boxed5w0ujx" path="res://contents/main_earlymenu/main_earlymenu.tscn" id="3_iwrxd"]
+[ext_resource type="Theme" uid="uid://db1ti5s17n535" path="res://contents/main_pdamenu/pda_theme_for_earlymenu.tres" id="4_iwrxd"]
+
+[node name="Main_PDAMenu" type="TextureRect"]
+custom_minimum_size = Vector2(1280, 921)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_15sf4")
+expand_mode = 1
+script = ExtResource("2_ht1jx")
+
+[node name="GrabArea" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 35.0
+offset_top = 20.0
+offset_right = 260.0
+offset_bottom = 700.0
+mouse_default_cursor_shape = 6
+
+[node name="WindowButton" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 1055.0
+offset_top = 92.0
+offset_right = 1145.0
+offset_bottom = 135.0
+alignment = 2
+
+[node name="Minimize" type="Button" parent="WindowButton"]
+custom_minimum_size = Vector2(43, 43)
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_disabled_color = Color(0.501961, 0.501961, 0.501961, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 25
+text = "−"
+flat = true
+
+[node name="Close" type="Button" parent="WindowButton"]
+custom_minimum_size = Vector2(43, 43)
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_disabled_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.74902, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(1, 0, 0, 1)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_focus_color = Color(1, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.75, 0, 0, 1)
+theme_override_font_sizes/font_size = 25
+text = "⨉"
+flat = true
+
+[node name="Main_EarlyMenu" parent="." instance=ExtResource("3_iwrxd")]
+layout_mode = 2
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 365.0
+offset_top = 135.0
+offset_right = 1625.0
+offset_bottom = 1155.0
+scale = Vector2(0.65, 0.65)
+theme = ExtResource("4_iwrxd")
+
+[connection signal="button_down" from="GrabArea" to="." method="on_grab_area_down"]
+[connection signal="button_up" from="GrabArea" to="." method="on_grab_area_up"]
+[connection signal="pressed" from="WindowButton/Minimize" to="." method="on_minimize_button_click"]
+[connection signal="pressed" from="WindowButton/Close" to="." method="on_close_button_click"]

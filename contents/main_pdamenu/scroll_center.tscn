@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://o7uhk5u6fkn0"]
+
+[ext_resource type="Texture2D" uid="uid://cx4s50vvaa0bx" path="res://contents/main_pdamenu/PDA_scroll_center.png" id="1_tb22e"]
+[ext_resource type="Script" uid="uid://dxlk181tqo53o" path="res://contents/main_pdamenu/scroll_center.gd" id="2_2jqh5"]
+
+[node name="ScrollCenter" type="Sprite2D"]
+texture = ExtResource("1_tb22e")
+script = ExtResource("2_2jqh5")

@@ -1,6 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://didru7ybwh5hj"]
+[gd_scene load_steps=7 format=3 uid="uid://didru7ybwh5hj"]
 
+[ext_resource type="StyleBox" uid="uid://cxbggvp8i807f" path="res://contents/main_pdamenu/stylebox_hover_for_installer_select_checks.tres" id="1_3x2af"]
+[ext_resource type="StyleBox" uid="uid://ch5e8fdgvdueo" path="res://contents/main_pdamenu/stylebox_for_installer_select_checks.tres" id="1_qmiik"]
+[ext_resource type="StyleBox" uid="uid://cfbg411mxcqtg" path="res://contents/main_pdamenu/stylebox_focus_for_installer_select_checks.tres" id="1_svkpa"]
 [ext_resource type="ButtonGroup" uid="uid://cey28pqe8n2uh" path="res://contents/main_earlymenu/difficult_button_group.tres" id="1_uyrad"]
+[ext_resource type="StyleBox" uid="uid://cwbljufi3afhf" path="res://contents/main_pdamenu/stylebox_disabled_for_installer_select_checks.tres" id="2_fdp20"]
 [ext_resource type="Script" uid="uid://cgc11q4nuiert" path="res://contents/main_earlymenu/difficult_select_check_box.gd" id="2_qmiik"]
 
 [node name="DifficultSelectCheckBox" type="CheckBox"]
@@ -9,5 +13,12 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme_override_styles/focus = ExtResource("1_svkpa")
+theme_override_styles/disabled = ExtResource("2_fdp20")
+theme_override_styles/hover_pressed = ExtResource("1_3x2af")
+theme_override_styles/hover = ExtResource("1_3x2af")
+theme_override_styles/pressed = ExtResource("1_qmiik")
+theme_override_styles/normal = ExtResource("1_qmiik")
 button_group = ExtResource("1_uyrad")
 script = ExtResource("2_qmiik")

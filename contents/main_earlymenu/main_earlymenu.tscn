@@ -1,20 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://b6boxed5w0ujx"]
+[gd_scene load_steps=4 format=3 uid="uid://b6boxed5w0ujx"]
 
 [ext_resource type="Theme" uid="uid://cql86uwxm36wp" path="res://contents/main_earlymenu/theme.tres" id="1_kq37u"]
 [ext_resource type="Script" uid="uid://ubiqiglpve8g" path="res://contents/main_earlymenu/main_earlymenu.gd" id="2_tekc0"]
 [ext_resource type="Texture2D" uid="uid://beu0pefh5ovbs" path="res://contents/main_earlymenu/welcome_picture_0.jpg" id="3_x8ole"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tekc0"]
-bg_color = Color(0, 0, 0, 0.12549)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
 [node name="Main_EarlyMenu" type="PanelContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme = ExtResource("1_kq37u")
 script = ExtResource("2_tekc0")
 
@@ -27,17 +22,18 @@ tab_focus_mode = 0
 
 [node name="Welcome" type="VBoxContainer" parent="TabContainer"]
 layout_mode = 2
-theme_override_constants/separation = 0
 metadata/_tab_index = 0
 
 [node name="TextureRect" type="TextureRect" parent="TabContainer/Welcome"]
 layout_mode = 2
 size_flags_vertical = 3
 texture = ExtResource("3_x8ole")
+expand_mode = 1
 stretch_mode = 6
 
 [node name="ContinueButton" type="Button" parent="TabContainer/Welcome"]
 layout_mode = 2
+mouse_default_cursor_shape = 2
 text = "继续"
 
 [node name="EULA" type="VBoxContainer" parent="TabContainer"]
@@ -58,9 +54,9 @@ layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_kq37u")
 bbcode_enabled = true
-text = "[center]百川HUB(早期实验版)使用协议[/center]
+text = "[center]百川HUB(早期实验版-PDA主题)使用协议[/center]
 
-以下将百川HUB(早期实验版)称为\"本程序\"。
+以下将百川HUB(早期实验版-PDA主题)称为\"本程序\"。
 请在继续使用本程序前仔细阅读本协议，请您在已完全同意本协议后再点击\"我已阅读并同意该协议\"按钮。若您不同意本协议，请勿使用本程序。
 
 一，开源协议
@@ -68,11 +64,13 @@ text = "[center]百川HUB(早期实验版)使用协议[/center]
 源码仓库URL：https://github.com/bocai-bca/BaiChuanHUB
 
 二，免责声明
-本程序属于仍需经历测试检验的早期实验版，开发方尚不能保证其能正常无误地运行，且鉴于其的开源性质和其遵循的开源协议，本协议在此声明：对于您因运行本程序而获得的任何损失，如数据错误、数据丢失、硬件损坏等，无论损失的造成原因是本程序按开发方的设计正常运行(含恶意意图的除外)，或是开发方存在设计失误以致引发问题，还是以超出了开发方预期的方式运行(即发生意外的错误)，开发方都无需承担任何责任、无需对您进行任何赔偿。
+本程序属于仍需经历测试检验的早期实验版，开发方尚不能保证其能正常无误地运行，且鉴于其的开源性质和其遵循的开源协议，本协议在此声明：对于您因运行本程序而获得的任何损失，如数据错误、数据丢失、硬件损坏等，无论损失的造成原因是本程序按开发方的设计正常运行(含恶意意图的除外)、开发方开发过程中失误(如代码存在编译前可见的错误或代码将进行的行为在客观上不符合开发方设计)，或是开发方存在设计失误以致引发问题(开发方的设计不适用于实际情况或存在疏忽、纰漏)，还是以超出了开发方预期的方式运行(即发生意外的错误)，开发方都无需承担任何责任、无需对您进行任何赔偿。
 同意本协议意味着您同意/接受该免责声明，且每次使用本程序都需要您同意一次该免责声明，您的每次同意可仅对该次使用生效。
 
 三，与百川归海的关系
-\"百川归海\"是游戏《深海迷航》(Subnautica)的社区模组整合包，本程序开发方与\"百川归海\"的制作团队是合作关系，而本程序与\"百川归海\"是各自独立的项目，即合作但没有从属关系。当任意一方的项目发生问题时，问题的讨论、判定、追责范围将限制于该方，而不扩散到对方。"
+\"百川归海\"是游戏《深海迷航》(Subnautica)的社区模组整合包，本程序开发方与\"百川归海\"的制作团队是合作关系，而本程序与\"百川归海\"是各自独立的项目，即合作但没有从属关系。当任意一方的项目发生问题时，问题的讨论、判定、追责范围将限制于该方，而不扩散到对方。
+
+上次修订：2025年8月31日"
 
 [node name="AgreeButtonBar" type="HBoxContainer" parent="TabContainer/EULA"]
 layout_mode = 2
@@ -80,11 +78,13 @@ layout_mode = 2
 [node name="RejectButton" type="Button" parent="TabContainer/EULA/AgreeButtonBar"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
 text = "不同意该协议并退出"
 
 [node name="AgreeButton" type="Button" parent="TabContainer/EULA/AgreeButtonBar"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
 text = "我已阅读并同意该协议"
 
 [node name="Installer" type="ScrollContainer" parent="TabContainer"]
@@ -116,14 +116,19 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = ".../Subnautica/Subnautica.exe"
+context_menu_enabled = false
+caret_blink = true
+caret_blink_interval = 0.3
 
 [node name="AutoFindButton" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation"]
 layout_mode = 2
 size_flags_stretch_ratio = 0.5
+mouse_default_cursor_shape = 2
 text = "自动寻找"
 
 [node name="GameTipText" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer"]
 modulate = Color(1, 1, 0, 1)
+clip_contents = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "  "
@@ -139,16 +144,22 @@ text = "百川安装包位置"
 [node name="LineEditPackLocation" type="LineEdit" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_default_cursor_shape = 8
 placeholder_text = ".../百川归海x.x.x安装包.zip"
+context_menu_enabled = false
 emoji_menu_enabled = false
+caret_blink = true
+caret_blink_interval = 0.3
 
 [node name="OpenZIPButton" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ModPackLocation"]
 layout_mode = 2
+mouse_default_cursor_shape = 8
 disabled = true
 text = "解压并加载"
 
 [node name="ModPackTipText" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer"]
 modulate = Color(0, 1, 0, 1)
+clip_contents = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 clip_text = true
@@ -156,6 +167,7 @@ clip_text = true
 [node name="ConsolePanel" type="HBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+alignment = 1
 
 [node name="InstallInfo" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel"]
 layout_mode = 2
@@ -187,6 +199,7 @@ autowrap_mode = 0
 [node name="Refresh" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo"]
 visible = false
 layout_mode = 2
+mouse_default_cursor_shape = 2
 text = "刷新"
 
 [node name="GameNotFound" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo"]
@@ -210,6 +223,7 @@ horizontal_alignment = 1
 [node name="OperationTabs" type="TabContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect"]
 layout_mode = 2
 size_flags_vertical = 3
+tab_alignment = 1
 current_tab = 0
 tab_focus_mode = 0
 
@@ -217,9 +231,14 @@ tab_focus_mode = 0
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="ReinstallCheck" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
+[node name="Spacing" type="Control" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install"]
 layout_mode = 2
-text = "重新安装(用于版本更新、更换难度)"
+
+[node name="ReinstallCheck" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
+clip_contents = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "覆盖现有安装(更新|换难度)"
 expand_icon = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
@@ -248,7 +267,7 @@ size_flags_vertical = 3
 [node name="AddonsContainer" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 2.0
+size_flags_stretch_ratio = 1.75
 
 [node name="AddonPacks" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer"]
 layout_mode = 2
@@ -265,12 +284,15 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="ConfirmInstall" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install" groups=["InstallOperatingNodes"]]
+clip_contents = true
 layout_mode = 2
+mouse_default_cursor_shape = 8
 disabled = true
 text = "请先设置游戏位置以确定安装位置"
 
 [node name="ModPackNotFound" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install"]
 visible = false
+clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
 text = "未加载安装包"
@@ -282,13 +304,20 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="CheckBox" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall"]
+[node name="Spacing" type="Control" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall"]
 layout_mode = 2
+
+[node name="CheckBox" type="CheckBox" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall"]
+clip_contents = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
 text = "保留BepInEx和QMods前置"
 
 [node name="ConfirmUninstall" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall"]
+clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
+mouse_default_cursor_shape = 8
 disabled = true
 text = "卸载
 不可用"
@@ -298,8 +327,12 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
+[node name="Spacing" type="Control" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify"]
+layout_mode = 2
+
 [node name="BlockTipText" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify"]
 visible = false
+clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
 text = "未加载安装包"
@@ -307,8 +340,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StartVerify" type="Button" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify"]
+clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
+mouse_default_cursor_shape = 8
 disabled = true
 text = "校验整合包完整性
 (仅适用于已安装当前选定安装包的情形)
@@ -330,13 +365,12 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 2
+mouse_default_cursor_shape = 1
 theme_override_font_sizes/bold_italics_font_size = 20
 theme_override_font_sizes/italics_font_size = 20
 theme_override_font_sizes/mono_font_size = 20
 theme_override_font_sizes/normal_font_size = 20
 theme_override_font_sizes/bold_font_size = 20
-theme_override_styles/focus = SubResource("StyleBoxFlat_tekc0")
-theme_override_styles/normal = SubResource("StyleBoxFlat_tekc0")
 bbcode_enabled = true
 scroll_following = true
 autowrap_mode = 1

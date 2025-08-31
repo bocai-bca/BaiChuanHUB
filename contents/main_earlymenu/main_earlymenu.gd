@@ -33,7 +33,7 @@ class_name Main_EarlyMenu
 @onready var n_operation_uninstall_confirm_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall as Button
 
 ## 最小窗口大小
-const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 720)
+const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 921)
 enum Tabs{
 	WELCOME = 0, #欢迎
 	EULA = 1, #最终用户许可协议
@@ -103,13 +103,14 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	n_tab_container.set_tab_disabled(Tabs.INSTALLER, true)
+	n_tab_container.get_tab_bar().mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for i in n_tabs.size(): #按索引遍历标签列表
 		n_tab_container.set_tab_title(i, TabsNames[i]) #设置标签栏上标签的标题
 	for i in n_installer_tabs.size(): #按索引遍历安装器标签列表
 		n_installer_tab_container.set_tab_title(i, InstallerOperationTabsNames[i]) #设置安装器标签栏上标签的标题
 	if (use_builtin_pack):
 		n_line_edit_pack_location.editable = false
-		n_line_edit_pack_location.placeholder_text = "因安全原因已禁止手动指定安装包，将自动使用捆绑式安装包"
+		n_line_edit_pack_location.placeholder_text = "手动指定已禁用，将自动使用捆绑式安装包"
 		n_open_zip_button.disabled = true
 		var load_path: String = OS.get_executable_path().get_base_dir().path_join("pack")
 		print("加载捆绑式安装包：", load_path)
@@ -128,7 +129,8 @@ func _physics_process(_delta: float) -> void:
 
 ## 程序关闭方法，此方法中要写临时目录的释放行为
 func quit_program() -> void:
-	installer.thread.wait_to_finish()
+	if (installer.thread.is_started()):
+		installer.thread.wait_to_finish()
 	get_tree().quit()
 
 ## 隐藏游戏状态信息，需指定目标状态
@@ -185,18 +187,22 @@ func refresh_game_info() -> void:
 			text_baichuan_installed = "[color=red]发生错误[/color]"
 			n_operation_uninstall_confirm_button.text = "卸载\n不可用"
 			n_operation_uninstall_confirm_button.disabled = true
+			n_operation_uninstall_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
 		BaiChuanInstaller.GameStateReport.BaiChuanInstalled.NO: #如果什么都不存在
 			text_baichuan_installed = "[color=red]否[/color]"
 			n_operation_uninstall_confirm_button.text = "卸载\n不可用"
 			n_operation_uninstall_confirm_button.disabled = true
+			n_operation_uninstall_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
 		BaiChuanInstaller.GameStateReport.BaiChuanInstalled.HALF: #如果存在部分迹象
 			text_baichuan_installed = "[color=yellow]部分[/color]"
 			n_operation_uninstall_confirm_button.text = "卸载\n不可用"
 			n_operation_uninstall_confirm_button.disabled = true
+			n_operation_uninstall_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
 		BaiChuanInstaller.GameStateReport.BaiChuanInstalled.FULL: #如果存在所有迹象
 			text_baichuan_installed = "[color=green]{0} {1} {2}附属[/color]".format([game_state_report.baichuan_installed_version_name, game_state_report.baichuan_installed_difficult_name, str(game_state_report.baichuan_installed_addons_count)])
 			n_operation_uninstall_confirm_button.text = "卸载\n{0}、{1}、{2}个附属包".format([game_state_report.baichuan_installed_version_name, game_state_report.baichuan_installed_difficult_name, str(game_state_report.baichuan_installed_addons_count)])
 			n_operation_uninstall_confirm_button.disabled = false
+			n_operation_uninstall_confirm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	n_state_info_text.text = text.format([text_version_verify, text_bepinex_exist, text_qmods_exist, text_baichuan_installed])
 
 ## 加载安装包
@@ -214,6 +220,8 @@ func load_install_pack(pack_path: String) -> void:
 		true:
 			if (not DirAccess.dir_exists_absolute(pack_path)): #如果文件夹不存在
 				n_mod_pack_tip_text.text = "捆绑式安装包丢失"
+				if (OS.get_executable_path().contains("/AppData/Local/Temp/")): #如果发现在临时目录中执行
+					n_mod_pack_tip_text.text = "捆绑式安装包丢失。请将压缩包所有内容一起解压至妥善位置后再打开本exe，不要在解压软件界面中直接打开"
 				n_mod_pack_tip_text.modulate = Color.RED
 				refresh_log() #刷新日志
 				return
@@ -312,17 +320,21 @@ func update_install_confirm_button() -> void:
 	if (not is_game_path_ready): #如果游戏路径尚未就绪
 		n_operation_install_confirm_button.disabled = true
 		n_operation_install_confirm_button.text = "请先设置游戏位置以确定安装位置"
+		n_operation_install_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
 	elif (not is_pack_load_success): #如果安装包没有加载完成
 		n_operation_install_confirm_button.disabled = true
 		n_operation_install_confirm_button.text = "安装包未加载"
+		n_operation_install_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
 	elif (install_option_difficult_current != -1):
 		n_operation_install_confirm_button.disabled = false
+		n_operation_install_confirm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		var install_text_prefix: String
-		install_text_prefix = "重新安装：" if install_option_reinstall else "开始安装："
+		install_text_prefix = "覆盖安装：" if install_option_reinstall else "开始安装："
 		n_operation_install_confirm_button.text = install_text_prefix + meta_report.version_name + "、" + meta_report.difficults_names[install_option_difficult_current] + "、" + str(install_option_addons_current.size()) + "个附属包"
 	else:
 		n_operation_install_confirm_button.disabled = true
 		n_operation_install_confirm_button.text = "请选择难度"
+		n_operation_install_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
 
 #region 界面元素触发函数
 ## 欢迎/继续
