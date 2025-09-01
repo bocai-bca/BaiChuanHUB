@@ -19,17 +19,17 @@ script = ExtResource("2_ht1jx")
 [node name="GrabArea" type="TextureButton" parent="."]
 layout_mode = 0
 offset_left = 35.0
-offset_top = 20.0
+offset_top = 32.0
 offset_right = 260.0
-offset_bottom = 700.0
+offset_bottom = 889.0
 mouse_default_cursor_shape = 6
 
 [node name="WindowButton" type="HBoxContainer" parent="."]
 layout_mode = 0
-offset_left = 1055.0
-offset_top = 92.0
-offset_right = 1145.0
-offset_bottom = 135.0
+offset_left = 1100.0
+offset_top = 75.0
+offset_right = 1190.0
+offset_bottom = 118.0
 alignment = 2
 
 [node name="Minimize" type="Button" parent="WindowButton"]
