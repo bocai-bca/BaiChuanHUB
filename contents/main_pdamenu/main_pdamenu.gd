@@ -5,6 +5,16 @@ class_name Main_PDAMenu
 @onready var n_grab_area: TextureButton = $GrabArea as TextureButton
 @onready var n_earlymenu: Main_EarlyMenu = $Main_EarlyMenu as Main_EarlyMenu
 
+@onready var n_audio_click_small: AudioStreamPlayer = $Audio_ClickSmall as AudioStreamPlayer
+@onready var n_audio_click_medium: AudioStreamPlayer = $Audio_ClickMedium as AudioStreamPlayer
+@onready var n_audio_click_large: AudioStreamPlayer = $Audio_ClickLarge as AudioStreamPlayer
+@onready var n_audio_open: AudioStreamPlayer = $Audio_Open as AudioStreamPlayer
+@onready var n_audio_close: AudioStreamPlayer = $Audio_Close as AudioStreamPlayer
+@onready var n_audio_scan: AudioStreamPlayer = $Audio_Scan as AudioStreamPlayer
+@onready var n_audio_warn: AudioStreamPlayer = $Audio_Warn as AudioStreamPlayer
+@onready var n_audio_error: AudioStreamPlayer = $Audio_Error as AudioStreamPlayer
+@onready var n_audio_success: AudioStreamPlayer = $Audio_Success as AudioStreamPlayer
+
 ## 子菜单坐标比率(用于position)，基于本场景根节点size属性
 const SUBMENU_POS_RATE: Vector2 = Vector2(365.0 / 1280.0, 135.0 / 921.0)
 ## 子菜单尺寸比率(用于size)，基于本场景根节点size属性
@@ -15,6 +25,7 @@ var mouse_pos_on_grab: Vector2i = Vector2i.ZERO
 var window_pos_on_grab: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
+	## 00主题修补
 	($Main_EarlyMenu/TabContainer/Welcome/TextureRect as TextureRect).texture = preload("res://contents/main_pdamenu/welcome_picture_0_blur.png")
 	($Main_EarlyMenu/TabContainer/EULA/MarginContainer/RichTextLabel as RichTextLabel).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer as ScrollContainer).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
@@ -25,6 +36,49 @@ func _ready() -> void:
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify as Button).add_theme_stylebox_override(&"pressed", preload("res://contents/main_pdamenu/stylebox_pressed_for_installer_select_checks.tres"))
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify as Button).add_theme_stylebox_override(&"focus", preload("res://contents/main_pdamenu/stylebox_focus_for_installer_select_checks.tres"))
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify as Button).add_theme_stylebox_override(&"disabled", preload("res://contents/main_pdamenu/stylebox_disabled_for_installer_select_checks.tres"))
+	## /00
+	## 01声音订阅信号
+	($Main_EarlyMenu/TabContainer as TabContainer).tab_changed.connect(
+		func(i: int) -> void:
+			n_audio_click_large.play()
+	)
+	#($Main_EarlyMenu/TabContainer/Welcome/ContinueButton as Button).pressed.connect(n_audio_click_medium.play)
+	($Main_EarlyMenu/TabContainer/EULA/AgreeButtonBar/RejectButton as Button).pressed.connect(n_audio_click_medium.play)
+	($Main_EarlyMenu/TabContainer/EULA/AgreeButtonBar/AgreeButton as Button).pressed.connect(n_audio_click_medium.play)
+	n_earlymenu.game_location_autofind.connect(
+		func(success: bool) -> void:
+			if (success):
+				n_audio_scan.play()
+				return
+			n_audio_error.play()
+	)
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs as TabContainer).tab_changed.connect(
+		func(i: int) -> void:
+			n_audio_click_large.play()
+	)
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo/Refresh as Button).pressed.connect(n_audio_click_medium.play)
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ReinstallCheck as CheckBox).pressed.connect(n_audio_click_small.play)
+	n_earlymenu.install_option_difficult_clicked.connect(
+		func(index: int) -> void:
+			n_audio_click_small.play()
+	)
+	n_earlymenu.install_option_addon_clicked.connect(
+		func(index: int) -> void:
+			n_audio_click_small.play()
+	)
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall as Button).pressed.connect(n_audio_click_medium.play)
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/CheckBox as CheckBox).pressed.connect(n_audio_click_small.play)
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall as Button).pressed.connect(n_audio_click_medium.play)
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify as Button).pressed.connect(n_audio_click_medium.play)
+	n_earlymenu.new_warn.connect(n_audio_warn.play)
+	n_earlymenu.new_error.connect(n_audio_error.play)
+	n_earlymenu.operation_finished.connect(
+		func(success: bool) -> void:
+			if (success):
+				n_audio_success.play()
+	)
+	## /01
+	n_audio_open.play()
 
 func _process(delta: float) -> void:
 	if (mouse_grabbing):
@@ -49,8 +103,20 @@ func on_grab_area_up() -> void:
 ## 最小化被点击
 func on_minimize_button_click() -> void:
 	get_window().mode = Window.MODE_MINIMIZED
+	n_audio_close.play()
+	get_window().focus_entered.connect(on_window_cancel_minimized, CONNECT_ONE_SHOT)
 
 ## 叉叉被点击
 func on_close_button_click() -> void:
+	n_audio_close.play()
+	get_window().mode = Window.MODE_MINIMIZED
+	n_audio_close.finished.connect(quit_program_after_sound_played, CONNECT_ONE_SHOT)
+
+## 用于在退出音效播放完毕后退出程序的方法
+func quit_program_after_sound_played() -> void:
 	n_earlymenu.quit_program()
+
+## 窗口离开最小化
+func on_window_cancel_minimized() -> void:
+	n_audio_open.play()
 #endregion

@@ -2,11 +2,25 @@ extends PanelContainer
 class_name Main_EarlyMenu
 ## 早期版主菜单
 
+## 信号-执行游戏位置自动寻找后发出，附带成功与否
+signal game_location_autofind(success: bool)
+## 信号-安装选项任意一个难度按钮被点击时发出，附带被点击的按钮的索引
+signal install_option_difficult_clicked(index: int)
+## 信号-安装选项任意一个附属包按钮被点击时发出，附带被点击的按钮的索引
+signal install_option_addon_clicked(index: int)
+## 信号-日志中出现新警告时发出
+signal new_warn()
+## 信号-日志中出现新错误时发出
+signal new_error()
+## 信号-执行操作完成后发出，附带成功与否
+signal operation_finished(success: bool)
+
 @onready var n_tab_container: TabContainer = $TabContainer as TabContainer
 @onready var n_tabs: Dictionary[Tabs, Control] = {
 	Tabs.WELCOME: $TabContainer/Welcome as Control,
 	Tabs.EULA: $TabContainer/EULA as Control,
 	Tabs.INSTALLER: $TabContainer/Installer as Control,
+	Tabs.DOCS: $TabContainer/Docs as Control,
 }
 @onready var n_installer_tab_container: TabContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs as TabContainer
 @onready var n_installer_tabs: Dictionary[InstallerTabs, Control] = {
@@ -38,6 +52,7 @@ enum Tabs{
 	WELCOME = 0, #欢迎
 	EULA = 1, #最终用户许可协议
 	INSTALLER = 2, #安装器
+	DOCS = 3, #文档
 }
 enum InstallerTabs{
 	INSTALL = 0, #安装
@@ -52,7 +67,8 @@ enum GameInfoState{
 const TabsNames: PackedStringArray = [
 	"欢迎",
 	"使用协议",
-	"百川归海安装器",
+	"安装器",
+	"文档"
 ]
 const InstallerOperationTabsNames: PackedStringArray = [
 	"安装",
@@ -73,6 +89,7 @@ var is_eula_agreed: bool = false:
 	set(value):
 		if (value and is_node_ready()):
 			n_tab_container.set_tab_disabled(Tabs.INSTALLER, false) #解锁安装器
+			n_tab_container.set_tab_disabled(Tabs.DOCS, false) #解锁文档
 ## 游戏路径指定是否已就绪
 var is_game_path_ready: bool = false
 ## 安装包是否已加载成功
@@ -103,6 +120,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	n_tab_container.set_tab_disabled(Tabs.INSTALLER, true)
+	n_tab_container.set_tab_disabled(Tabs.DOCS, true)
 	n_tab_container.get_tab_bar().mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for i in n_tabs.size(): #按索引遍历标签列表
 		n_tab_container.set_tab_title(i, TabsNames[i]) #设置标签栏上标签的标题
@@ -126,6 +144,7 @@ func _physics_process(_delta: float) -> void:
 			n_operation_install_confirm_button.disabled = false
 			n_operation_uninstall_confirm_button.disabled = false
 			refresh_game_info()
+			emit_signal(&"operation_finished", installer.thread.wait_to_finish())
 
 ## 程序关闭方法，此方法中要写临时目录的释放行为
 func quit_program() -> void:
@@ -265,7 +284,7 @@ func place_install_option_nodes() -> void:
 	if (meta_report == null): #如果元数据报告为null
 		return
 	for i in meta_report.difficults_names.size(): #按索引遍历所有难度名称
-		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate()
+		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate() as EarlyMenu_DifficultSelectCheckBox
 		new_check_box.text = meta_report.difficults_names[i]
 		new_check_box.difficult_index = i
 		new_check_box.pressed.connect(
@@ -273,11 +292,12 @@ func place_install_option_nodes() -> void:
 				install_option_difficult_current = new_check_box.difficult_index
 				update_install_addons_checkboxes_disable()
 				update_install_confirm_button()
+				emit_signal(&"install_option_difficult_clicked", i)
 		)
 		install_option_difficults_nodes.append(new_check_box)
 		n_operation_install_option_difficults_container.add_child(new_check_box)
 	for i in meta_report.addons.size(): #按索引遍历所有附属包名称
-		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate()
+		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate() as EarlyMenu_AddonSelectCheckBox
 		new_check_box.text = meta_report.addons[i].name
 		new_check_box.addon_index = i
 		new_check_box.support_difficults = meta_report.addons[i].support_difficults
@@ -293,6 +313,7 @@ func place_install_option_nodes() -> void:
 							break
 						install_option_addons_current.remove_at(find_result)
 				update_install_confirm_button()
+				emit_signal(&"install_option_addon_clicked", i)
 		)
 		install_option_addons_nodes.append(new_check_box)
 		n_operation_install_option_addons_container.add_child(new_check_box)
@@ -352,13 +373,16 @@ func eula_reject() -> void:
 func eula_agree() -> void:
 	is_eula_agreed = true #将EULA已同意设为true
 	n_eula_agree_bar.visible = false #使EULA同意栏不可见
-	n_tab_container.current_tab = Tabs.INSTALLER #将主选项卡焦点切换到安装器
+	#n_tab_container.current_tab = Tabs.INSTALLER #将主选项卡焦点切换到安装器
 
 ## 安装器/自动寻找游戏位置
 func installer_auto_find_game() -> void:
 	var path_got: String = installer.search_game() #调用安装器获取游戏路径
-	if (not path_got.is_empty()): #如果获得的路径为空表示没有找到，反之则找到了
+	if (path_got.is_empty()): #如果获得的路径为空表示没有找到，反之则找到了
+		emit_signal(&"game_location_autofind", false)
+	else: #否则(找到了游戏)
 		n_line_edit_game_location.text = path_got #将路径填充到填写框里
+		emit_signal(&"game_location_autofind", true)
 	refresh_log() #刷新日志
 	installer_gamepath_lose_focus()
 
@@ -461,6 +485,10 @@ func installer_packpath_lose_focus() -> void:
 ## 刷新日志，在任何(可能)能够影响日志的菜单元素被触发以后均调用此方法，由其他连接了信号的方法调用
 func refresh_log() -> void:
 	installer.mutex.lock()
+	if (installer.log_warn_count > 0):
+		emit_signal(&"new_warn")
+	if (installer.log_error_count > 0):
+		emit_signal(&"new_error")
 	n_log_text.text = installer.log_string #将安装器的日志内容传递到本实例
 	installer.mutex.unlock()
 #endregion

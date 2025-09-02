@@ -13,9 +13,19 @@ var thread: Thread = Thread.new()
 var mutex: Mutex = Mutex.new()
 ## 日志输出实例
 var logger: BaiChuanInstaller_Logger = BaiChuanInstaller_Logger.new(mutex)
-## 日志
+## 获取自上次读取log_string后的警报条目数量，注意：请自行在读取本属性之前锁定互斥锁，并在之后解锁
+var log_warn_count: int:
+	get:
+		return logger.warn_count_after_last_read
+## 获取自上次读取log_string后的错误条目数量，注意：请自行在读取本属性之前锁定互斥锁，并在之后解锁
+var log_error_count: int:
+	get:
+		return logger.error_count_after_last_read
+## 获取日志，读取本属性之后会复位警报与错误计数，注意：请自行在读取本属性之前锁定互斥锁，并在之后解锁
 var log_string: String:
 	get:
+		logger.warn_count_after_last_read = 0
+		logger.error_count_after_last_read = 0
 		return logger.log_string
 ## 游戏寻找器实例
 var game_searcher: BaiChuanInstaller_GameSearcher = BaiChuanInstaller_GameSearcher.new()
@@ -31,12 +41,12 @@ func search_game() -> String:
 	var drivers_names: PackedStringArray = [] #声明局部字符串数组，用作盘符列表
 	for driver_index in DirAccess.get_drive_count(): #按索引遍历所有驱动器分区
 		drivers_names.append(DirAccess.get_drive_name(driver_index)) #将当前遍历到的驱动器分区名记录到盘符列表
-	logger.log_info("找到驱动器分区：" + str(drivers_names)) #日志输出
+	logger.log_darken("找到驱动器分区：" + str(drivers_names)) #日志输出
 	var absolute_pathes: PackedStringArray = game_searcher.search_game_path_on_drives(drivers_names) #将盘符列表传递给游戏查找器，获得一个包含着文件存在的绝对路径列表
 	## /00
 	## 01输出
 	if (absolute_pathes.is_empty()): #如果为空，意味着找不到游戏
-		logger.log_warn("找不到游戏") #日志输出
+		logger.log_warn("找不到游戏(无需重试，没用的)") #日志输出
 		return "" #返回一个空文本
 	for absolute_path in absolute_pathes: #遍历找到文件的路径列表
 		if (verify_md5(absolute_path)): #如果找到md5验证正确的文件
@@ -130,15 +140,15 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 		if (not pack_access.open_new_without_unzip(pack_path, logger)):
 			logger.log_error("BaiChuanInstaller: 因发生错误而中止安装包加载")
 			return null
-	logger.log_info("已打开压缩包")
+	logger.log_darken("已打开压缩包")
 	if (not pack_access.parse_meta(logger)): #解析元数据并检查是否成功
 		logger.log_error("BaiChuanInstaller: 因发生错误而中止安装包加载")
 		return null
-	logger.log_info("安装包元数据解析完成")
+	logger.log_darken("安装包元数据解析完成")
 	if (not pack_access.parse_contents(logger)): #解析包内容和验证脚本并检查是否成功
 		logger.log_error("BaiChuanInstaller: 因发生错误而中止安装包加载")
 		return null
-	logger.log_info("安装包内容解析已完成")
+	logger.log_darken("安装包内容解析已完成")
 	var result: PackMetaReport = PackMetaReport.new()
 	result.version = pack_access.pack_meta.version
 	result.version_name = pack_access.pack_meta.version_name
@@ -160,6 +170,7 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 			if (find_index != -1 and not addon_meta.support_difficults.has(find_index)): #如果支持的难度列表中不存在当前获得的索引，此判断是用来防止重复添加元素
 				addon_meta.support_difficults.append(find_index) #将当前获得的索引添加到元数据
 		result.addons.append(addon_meta)
+	logger.log_info("安装包已载入")
 	return result
 
 ## 开启多线程安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，不能返回成功与否
@@ -190,18 +201,18 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 			pass
 		_:
 			if (reinstall):
-				logger.log_info("发现存在BepInEx，将进行覆盖")
+				logger.log_darken("发现存在BepInEx，将进行覆盖")
 				need_uninstall = true
 			else:
-				logger.log_warn("发现存在BepInEx，请在安装前还原到纯净原版游戏状态。若执意继续安装或希望更新百川或更换难度，请勾选\"覆盖现有安装\"。勾选后安装器会跳过安全检查，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				logger.log_warn("发现存在BepInEx，请在安装前还原到纯净原版游戏状态。若执意继续安装，请勾选\"覆盖现有安装\"，安装器将保留当前游戏目录下的其他mod文件，并会尝试一次卸载百川。勾选后安装器会跳过安全检查，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
 				return false
 	match (game_state.is_qmods_exist):
 		true:
 			if (reinstall):
-				logger.log_info("发现存在QMods")
+				logger.log_darken("发现存在QMods")
 				need_uninstall = true
 			else:
-				logger.log_warn("发现存在QMods，请在安装前还原到纯净原版游戏状态。若执意继续安装或希望进行重新安装百川，请勾选\"重新安装\"，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				logger.log_warn("发现存在QMods，请在安装前还原到纯净原版游戏状态。若执意继续安装，请勾选\"覆盖现有安装\"，安装器将保留当前游戏目录下的其他mod文件，并会尝试一次卸载百川。勾选后安装器会跳过安全检查，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
 				return false
 	match (game_state.baichuan_installed):
 		GameStateReport.BaiChuanInstalled.ERROR:
@@ -211,10 +222,10 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 			pass
 		_:
 			if (reinstall):
-				logger.log_info("发现百川安装迹象，将进行重新安装")
+				logger.log_darken("发现百川安装迹象，将进行重新安装")
 				need_uninstall = true
 			else:
-				logger.log_error("BaiChuanInstaller: 发现存在百川安装迹象，若希望进行重新安装百川，请勾选\"重新安装\"。另外，安装器无法保证游戏在装有百川归海以外模组的非纯净状态下继续安装的安全性！")
+				logger.log_error("BaiChuanInstaller: 发现存在百川安装迹象，若希望更新百川或更换难度，请勾选\"覆盖现有安装\"。")
 				return false
 	if (need_uninstall):
 		## 重新安装
@@ -232,9 +243,9 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		return false
 	## /00 从此处起可确保传入的安装路径可访问、难度索引可用、附属包索引可用
 	var pack_dir: String = pack_access.dir_access.get_current_dir()
-	logger.log_info("正在放置前置")
+	logger.log_darken("正在放置前置")
 	BaiChuanInstaller_DirRecurs.copy_recursive(pack_dir.path_join(pack_access.FRAMEWORKS_DIR), absolute_path, logger)
-	logger.log_info("正在放置数据")
+	logger.log_darken("正在放置数据")
 	if (DirAccess.dir_exists_absolute(pack_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join("_"))): #如果存在通配难度数据
 		print("存在通配难度数据")
 		BaiChuanInstaller_DirRecurs.copy_recursive(pack_dir.path_join(BaiChuanInstaller_PackAccess.DATA_DIR).path_join("_"), absolute_path, logger)
@@ -272,7 +283,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 				return false
 			addons_scripts.append(match_script)
 	##  02执行难度安装脚本
-	logger.log_info("正在执行难度安装脚本")
+	logger.log_darken("正在执行难度安装脚本")
 	for command_index in difficult_script.commands_splitted.size(): #遍历难度安装脚本的命令
 		if (not script_handler.run_command(difficult_script.commands_splitted[command_index], -1, pack_access, logger)): #执行命令并检查是否成功
 			logger.log_error("BaiChuanInstaller: 难度安装脚本执行过程出现问题，发生于：" + str(command_index))
@@ -281,7 +292,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	##  /02
 	##  03执行附属包安装脚本
 	for addon_index in addons_scripts.size(): #遍历所有附属包脚本
-		logger.log_info("正在执行附属包安装脚本：" + str(addon_index))
+		logger.log_darken("正在执行附属包安装脚本：" + str(addon_index))
 		for command_index in addons_scripts[addon_index].commands_splitted.size(): #遍历当前附属包安装脚本的命令
 			if (not script_handler.run_command(addons_scripts[addon_index].commands_splitted[command_index], addon_index, pack_access,logger)): #执行命令并检查是否成功
 				logger.log_error("BaiChuanInstaller: 附属包安装脚本执行过程出现问题，发生于：" + str(command_index))
@@ -289,7 +300,7 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 				return false
 	##  /03
 	## 04制作卸载脚本
-	logger.log_info("正在制作卸载脚本")
+	logger.log_darken("正在制作卸载脚本")
 	var uninstall_script_content: String = ""
 	for addon_index in install_addons.size(): #按索引遍历所有待安装附属包
 		var i: int = install_addons.size() - 1 - addon_index #反转索引
@@ -362,7 +373,7 @@ func uninstall(absolute_path: String, keep_framework: bool) -> bool:
 		if (not keep_framework): #如果不要求保留前置，即需要删除前置
 			## 02删除前置
 			var success: bool = true
-			logger.log_info("正在删除前置")
+			logger.log_darken("正在删除前置")
 			var dirs_need_delete: PackedStringArray = [
 				"BepInEx", "BepInEx_Shim_Backup", "QMods"
 			]
@@ -397,7 +408,7 @@ func uninstall(absolute_path: String, keep_framework: bool) -> bool:
 		logger.log_info("卸载流程结束")
 		return true
 	#else: #否则(不存在卸载脚本)
-	logger.log_info("未找到卸载脚本，如需卸载请手动删除相关文件")
+	logger.log_warn("未找到卸载脚本，如需卸载请手动删除相关文件")
 	return false
 
 ## 游戏状态报告

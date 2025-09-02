@@ -1,9 +1,18 @@
-[gd_scene load_steps=5 format=3 uid="uid://c6045b6mkhhyq"]
+[gd_scene load_steps=14 format=3 uid="uid://c6045b6mkhhyq"]
 
 [ext_resource type="Texture2D" uid="uid://bnjhrgtd08hoo" path="res://contents/main_pdamenu/PDA.png" id="1_15sf4"]
 [ext_resource type="Script" uid="uid://dlx6jm186x5bh" path="res://contents/main_pdamenu/main_pdamenu.gd" id="2_ht1jx"]
 [ext_resource type="PackedScene" uid="uid://b6boxed5w0ujx" path="res://contents/main_earlymenu/main_earlymenu.tscn" id="3_iwrxd"]
 [ext_resource type="Theme" uid="uid://db1ti5s17n535" path="res://contents/main_pdamenu/pda_theme_for_earlymenu.tres" id="4_iwrxd"]
+[ext_resource type="AudioStream" uid="uid://ch0o2el01amec" path="res://contents/main_pdamenu/sounds/click_small.wav" id="5_tjy5m"]
+[ext_resource type="AudioStream" uid="uid://dyty2fdplh5yo" path="res://contents/main_pdamenu/sounds/click_medium.wav" id="6_m4ixa"]
+[ext_resource type="AudioStream" uid="uid://b4h1ttp0c5uxm" path="res://contents/main_pdamenu/sounds/click_large.wav" id="7_i65y5"]
+[ext_resource type="AudioStream" uid="uid://cfo6yqx8vuyh3" path="res://contents/main_pdamenu/sounds/open.wav" id="8_y7kt6"]
+[ext_resource type="AudioStream" uid="uid://xt6xm1qj43hp" path="res://contents/main_pdamenu/sounds/close.wav" id="9_lcffx"]
+[ext_resource type="AudioStream" uid="uid://bp7m4itysuanr" path="res://contents/main_pdamenu/sounds/scan.wav" id="10_sftfo"]
+[ext_resource type="AudioStream" uid="uid://b7q1j3c8p2mvq" path="res://contents/main_pdamenu/sounds/warn.wav" id="11_jbthv"]
+[ext_resource type="AudioStream" uid="uid://bpf4ykoppmibb" path="res://contents/main_pdamenu/sounds/error.wav" id="12_ujx0l"]
+[ext_resource type="AudioStream" uid="uid://co1kmfcuh5sfu" path="res://contents/main_pdamenu/sounds/success.wav" id="13_okfqs"]
 
 [node name="Main_PDAMenu" type="TextureRect"]
 custom_minimum_size = Vector2(1280, 921)
@@ -73,6 +82,40 @@ offset_right = 1625.0
 offset_bottom = 1155.0
 scale = Vector2(0.65, 0.65)
 theme = ExtResource("4_iwrxd")
+
+[node name="Audio_ClickSmall" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_tjy5m")
+max_polyphony = 4
+
+[node name="Audio_ClickMedium" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_m4ixa")
+max_polyphony = 4
+
+[node name="Audio_ClickLarge" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_i65y5")
+max_polyphony = 4
+
+[node name="Audio_Open" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_y7kt6")
+
+[node name="Audio_Close" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_lcffx")
+
+[node name="Audio_Scan" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_sftfo")
+max_polyphony = 4
+
+[node name="Audio_Warn" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11_jbthv")
+max_polyphony = 4
+
+[node name="Audio_Error" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("12_ujx0l")
+max_polyphony = 4
+
+[node name="Audio_Success" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("13_okfqs")
+max_polyphony = 4
 
 [connection signal="button_down" from="GrabArea" to="." method="on_grab_area_down"]
 [connection signal="button_up" from="GrabArea" to="." method="on_grab_area_up"]

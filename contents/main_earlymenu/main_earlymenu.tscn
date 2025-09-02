@@ -377,6 +377,11 @@ autowrap_mode = 1
 selection_enabled = true
 drag_and_drop_selection_enabled = false
 
+[node name="Docs" type="VBoxContainer" parent="TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 3
+
 [connection signal="pressed" from="TabContainer/Welcome/ContinueButton" to="." method="welcome_continue"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/RejectButton" to="." method="eula_reject"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/AgreeButton" to="." method="eula_agree"]
