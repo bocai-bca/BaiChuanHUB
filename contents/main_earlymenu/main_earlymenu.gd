@@ -46,10 +46,12 @@ signal operation_finished(success: bool)
 @onready var n_operation_uninstall_keep_framework_checkbox: CheckBox = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/CheckBox as CheckBox
 @onready var n_operation_uninstall_confirm_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall as Button
 @onready var n_docs_pack_not_loaded_label: Label = $TabContainer/Docs/PackNotLoaded as Label
-@onready var n_docs_notice_label: Label = $TabContainer/Docs/Notice as Label
-@onready var n_docs_search_bar: HBoxContainer = $TabContainer/Docs/SearchBar as HBoxContainer
-@onready var n_docs_object_list: VBoxContainer = $TabContainer/Docs/ObjectList as VBoxContainer
-@onready var n_docs_more_content_tip_label: Label = $TabContainer/Docs/Label as Label
+@onready var n_docs_menu_container: HBoxContainer = $TabContainer/Docs/HBoxContainer as HBoxContainer
+@onready var n_docs_info_text: Label = $TabContainer/Docs/InfoText as Label
+@onready var n_docs_search: LineEdit = $TabContainer/Docs/HBoxContainer/List/SearchLineEdit as LineEdit
+#@onready var n_docs_object_list: ScrollContainer = $TabContainer/Docs/HBoxContainer/List/ObjectList as ScrollContainer
+@onready var n_docs_object_list_hbox: HBoxContainer = $TabContainer/Docs/HBoxContainer/List/ObjectList/HBox as HBoxContainer
+@onready var n_docs_text_view: RichTextLabel = $TabContainer/Docs/HBoxContainer/TextView as RichTextLabel
 
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 921)
@@ -73,7 +75,7 @@ const TabsNames: PackedStringArray = [
 	"欢迎",
 	"使用协议",
 	"安装器",
-	"文档"
+	"文档(开发中)"
 ]
 const InstallerOperationTabsNames: PackedStringArray = [
 	"安装",
@@ -94,7 +96,7 @@ var is_eula_agreed: bool = false:
 	set(value):
 		if (value and is_node_ready()):
 			n_tab_container.set_tab_disabled(Tabs.INSTALLER, false) #解锁安装器
-			n_tab_container.set_tab_disabled(Tabs.DOCS, false) #解锁文档
+			#n_tab_container.set_tab_disabled(Tabs.DOCS, false) #解锁文档
 		is_eula_agreed = value
 ## 游戏路径指定是否已就绪
 var is_game_path_ready: bool = false
@@ -103,16 +105,12 @@ var is_pack_load_success: bool = false:
 	set(value):
 		if (value):
 			n_docs_pack_not_loaded_label.visible = false
-			n_docs_notice_label.visible = true
-			n_docs_object_list.visible = true
-			n_docs_search_bar.visible = true
-			n_docs_more_content_tip_label.visible = true
+			n_docs_menu_container.visible = true
+			n_docs_info_text.visible = true
 		else:
 			n_docs_pack_not_loaded_label.visible = true
-			n_docs_notice_label.visible = false
-			n_docs_object_list.visible = false
-			n_docs_search_bar.visible = false
-			n_docs_more_content_tip_label.visible = false
+			n_docs_menu_container.visible = false
+			n_docs_info_text.visible = false
 		is_pack_load_success = value
 ## 包元数据缓存
 var meta_report: BaiChuanInstaller.PackMetaReport
@@ -139,6 +137,7 @@ func _enter_tree() -> void:
 	get_tree().auto_accept_quit = false #关闭自动应答退出行为
 
 func _ready() -> void:
+	n_tab_container.current_tab = 0
 	n_tab_container.set_tab_disabled(Tabs.INSTALLER, true)
 	n_tab_container.set_tab_disabled(Tabs.DOCS, true)
 	n_tab_container.get_tab_bar().mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND

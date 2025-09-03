@@ -22,6 +22,7 @@
 		[] 一个难度
 			install.bcis 难度的安装脚本
 			uninstall.bcis 难度的卸载脚本
+	*[]docs 所有文档篇章，存放任意数量个txt，其中的内容为含BBCode章节内容，没有系统化的标题之分
 	[]frameworks 前置框架，如BepInEx和QMods，本文件夹的内容将在安装过程中首先被复制到游戏根目录
 		[]BepInEx
 			[]core
@@ -34,6 +35,7 @@
 	[]mods 所有模组本体
 		[] 一个模组本体，名称随意，里面容纳该模组本体的所有数据，供安装脚本自由取用
 	pack.json 安装包元数据，记录一些必要信息
+	*docs.json 文档条目元数据，记录文档章节的关键词
 
 pack.json结构：
 {}
@@ -56,6 +58,11 @@ pack.json结构：
 		{}一个附属包
 			path Str该附属包的路径，相对于压缩包的addons
 			name Str该附属包的名称，用于显示在UI中
+
+docs.json结构：
+{}
+	<path> []一个条目的路径，相对于docs目录
+		<keyword> Str一个关键词，用于搜索该条目
 
 addon.json结构：
 {}

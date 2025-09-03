@@ -32,7 +32,7 @@ func log_info(text: String) -> void:
 ## 在日志中追加一个暗淡消息
 func log_darken(text: String) -> void:
 	mutex.lock()
-	log_string += "[color=dim_gray]" + text + "[/color]\n"
+	log_string += "[color=web_gray]" + text + "[/color]\n"
 	mutex.unlock()
 	print(text)
 
