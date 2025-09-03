@@ -45,6 +45,11 @@ signal operation_finished(success: bool)
 @onready var n_operation_install_option_addons_container: VBoxContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer/ScrollContainer/AddonsNodesContainer as VBoxContainer
 @onready var n_operation_uninstall_keep_framework_checkbox: CheckBox = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/CheckBox as CheckBox
 @onready var n_operation_uninstall_confirm_button: Button = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall as Button
+@onready var n_docs_pack_not_loaded_label: Label = $TabContainer/Docs/PackNotLoaded as Label
+@onready var n_docs_notice_label: Label = $TabContainer/Docs/Notice as Label
+@onready var n_docs_search_bar: HBoxContainer = $TabContainer/Docs/SearchBar as HBoxContainer
+@onready var n_docs_object_list: VBoxContainer = $TabContainer/Docs/ObjectList as VBoxContainer
+@onready var n_docs_more_content_tip_label: Label = $TabContainer/Docs/Label as Label
 
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 921)
@@ -90,10 +95,25 @@ var is_eula_agreed: bool = false:
 		if (value and is_node_ready()):
 			n_tab_container.set_tab_disabled(Tabs.INSTALLER, false) #解锁安装器
 			n_tab_container.set_tab_disabled(Tabs.DOCS, false) #解锁文档
+		is_eula_agreed = value
 ## 游戏路径指定是否已就绪
 var is_game_path_ready: bool = false
 ## 安装包是否已加载成功
-var is_pack_load_success: bool = false
+var is_pack_load_success: bool = false:
+	set(value):
+		if (value):
+			n_docs_pack_not_loaded_label.visible = false
+			n_docs_notice_label.visible = true
+			n_docs_object_list.visible = true
+			n_docs_search_bar.visible = true
+			n_docs_more_content_tip_label.visible = true
+		else:
+			n_docs_pack_not_loaded_label.visible = true
+			n_docs_notice_label.visible = false
+			n_docs_object_list.visible = false
+			n_docs_search_bar.visible = false
+			n_docs_more_content_tip_label.visible = false
+		is_pack_load_success = value
 ## 包元数据缓存
 var meta_report: BaiChuanInstaller.PackMetaReport
 ## 安装选项难度节点列表
