@@ -19,12 +19,37 @@ class_name Main_PDAMenu
 const SUBMENU_POS_RATE: Vector2 = Vector2(365.0 / 1280.0, 135.0 / 921.0)
 ## 子菜单尺寸比率(用于size)，基于本场景根节点size属性
 const SUBMENU_SIZE_RATE: Vector2 = Vector2(1260.0 / 1280.0, 1020.0 / 921.0)
+## 窗口占据主屏幕尺寸的比率
+const WINDOW_SIZE_OF_SCREEN: float = 0.85
+
+#const GRAB_AREA_POS_OF_VIEWPORT: Vector2 = Vector2(35.0 / 1280.0, 32.0 / 921.0)
+#const GRAB_AREA_SIZE_OF_VIEWPORT: Vector2 = Vector2(225.0 / 1280.0, 857.0 / 921.0)
+#const WINDOW_BUTTON_POS_OF_VIEWPORT: Vector2 = Vector2(1100.0 / 1280.0, 75.0 / 921.0)
+#const WINDOW_BUTTON_SIZE_OF_VIEWPORT: Vector2 = Vector2(90.0 / 1280.0, 43.0 / 921.0)
+#const EARLY_MENU_POS_OF_VIEWPORT: Vector2 = Vector2(365.0 / 1280.0, 135.0 / 921.0)
+#const EARLY_MENU_SIZE_OF_VIEWPORT: Vector2 = Vector2(819.0 / 1280.0, 663.0 / 921.0)
+#const WINDOW_BUTTON_FONT_SIZE_OF_VIEWPORT_X: float = 25.0 / 1280.0
+#const EARLY_MENU_SCALE_DEFAULT: Vector2 = Vector2(0.65, 0.65)
 
 var mouse_grabbing: bool = false
 var mouse_pos_on_grab: Vector2i = Vector2i.ZERO
 var window_pos_on_grab: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
+	var window: Window = get_window()
+	var x_multi: float = float(window.size.x) / float(DisplayServer.screen_get_size(DisplayServer.get_primary_screen()).x)
+	var y_multi: float = float(window.size.y) / float(DisplayServer.screen_get_size(DisplayServer.get_primary_screen()).y)
+	var use_multi: float = 1.0 / maxf(x_multi, y_multi)
+	window.size = Vector2i(window.size * use_multi * WINDOW_SIZE_OF_SCREEN)
+	#n_grab_area.size = GRAB_AREA_SIZE_OF_VIEWPORT * Vector2(window.size)
+	#n_grab_area.position = GRAB_AREA_POS_OF_VIEWPORT * Vector2(window.size)
+	#($WindowButton as HBoxContainer).size = WINDOW_BUTTON_SIZE_OF_VIEWPORT * Vector2(window.size)
+	#($WindowButton as HBoxContainer).position = WINDOW_BUTTON_POS_OF_VIEWPORT * Vector2(window.size)
+	#($WindowButton/Close as Button).add_theme_font_size_override(&"font_size", int(WINDOW_BUTTON_FONT_SIZE_OF_VIEWPORT_X * window.size.x))
+	#($WindowButton/Minimize as Button).add_theme_font_size_override(&"font_size", int(WINDOW_BUTTON_FONT_SIZE_OF_VIEWPORT_X * window.size.x))
+	#n_earlymenu.size = Vector2(window.size) / EARLY_MENU_SIZE_OF_VIEWPORT
+	#n_earlymenu.scale = EARLY_MENU_SCALE_DEFAULT / use_multi * WINDOW_SIZE_OF_SCREEN
+	#n_earlymenu.position = EARLY_MENU_POS_OF_VIEWPORT * Vector2(window.size)
 	## 00主题修补
 	($Main_EarlyMenu/TabContainer/Welcome/TextureRect as TextureRect).texture = preload("res://contents/main_pdamenu/welcome_picture_0_blur.png")
 	($Main_EarlyMenu/TabContainer/EULA/MarginContainer/RichTextLabel as RichTextLabel).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())

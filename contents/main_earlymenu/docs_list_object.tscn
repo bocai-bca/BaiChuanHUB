@@ -1,0 +1,41 @@
+[gd_scene load_steps=3 format=3 uid="uid://puanjjyk513s"]
+
+[ext_resource type="Theme" uid="uid://bgmn1yy46bqel" path="res://contents/main_pdamenu/pda_theme_for_earlymenu_docs_obj.tres" id="1_6g254"]
+[ext_resource type="Script" uid="uid://b85pwagqc38rx" path="res://contents/main_earlymenu/docs_list_object.gd" id="1_ymm7x"]
+
+[node name="DocsListObject" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_6g254")
+script = ExtResource("1_ymm7x")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Title" type="RichTextLabel" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Title"
+scroll_active = false
+shortcut_keys_enabled = false
+
+[node name="Tags" type="HBoxContainer" parent="VBoxContainer"]
+clip_contents = true
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/Tags"]
+layout_mode = 2
+text = "Tag0"
+
+[node name="Label2" type="Label" parent="VBoxContainer/Tags"]
+layout_mode = 2
+text = "Tag1"
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 2
+flat = true

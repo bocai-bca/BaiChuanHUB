@@ -75,7 +75,7 @@ const TabsNames: PackedStringArray = [
 	"欢迎",
 	"使用协议",
 	"安装器",
-	"文档(开发中)"
+	"常见问题查询(开发中)"
 ]
 const InstallerOperationTabsNames: PackedStringArray = [
 	"安装",
