@@ -9,6 +9,12 @@ var content: String
 ## 标签列表
 var tags_list: PackedStringArray
 
+## 设置内容。需在该节点添加到场景树之前调用此方法
+func set_contents(new_content: String) -> void:
+	content = new_content
+	title = new_content.split("\n", true, 1)[0]
+
+## 检查是否含有标签并执行显示或隐藏
 func check_has_tag(tags: Array[String]) -> bool:
 	if (tags.is_empty()):
 		visible = true
@@ -21,6 +27,7 @@ func check_has_tag(tags: Array[String]) -> bool:
 	visible = true
 	return true
 
+## 设置标签。需在该节点添加到场景树之前调用此方法
 func set_tags(tags: PackedStringArray) -> void:
 	for node in $VBoxContainer/Tags.get_children():
 		node.queue_free()
