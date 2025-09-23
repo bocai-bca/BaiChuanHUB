@@ -89,12 +89,16 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 		i += 1
 	if (root_dir.dir_exists("BepInEx/plugins")):
 		i += 1
+	if (root_dir.file_exists("winhttp.dll")):
+		i += 1
+	if (root_dir.file_exists("doorstop_config.ini")):
+		i += 1
 	match (i):
 		0:
 			result.bepinex_installed = GameStateReport.BepInExInstalled.NO
-		1, 2:
+		1, 2, 3, 4:
 			result.bepinex_installed = GameStateReport.BepInExInstalled.HALF
-		3:
+		5:
 			result.bepinex_installed = GameStateReport.BepInExInstalled.FULL
 	result.is_qmods_exist = root_dir.dir_exists("QMods")
 	## 00百川安装状态检测

@@ -28,6 +28,7 @@ func open_pack(absolute_path: String) -> bool:
 	dir_access = DirAccess.open(absolute_path)
 	if (dir_access == null):
 		print("DocsPackAccess: 打开文档包失败，")
+	return false
 
 ## 文档对象，除内容外所有变量都由元数据指定
 class DocObject extends RefCounted:
