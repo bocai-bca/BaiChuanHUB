@@ -15,7 +15,7 @@ config/version="0.1.3"
 run/main_scene="uid://c6045b6mkhhyq"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="BCASoft/BaiChuanHUB"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.5", "GL Compatibility")
 run/low_processor_mode=true
 boot_splash/bg_color=Color(0, 0, 0, 0)
 boot_splash/show_image=false
@@ -32,6 +32,10 @@ window/size/transparent=true
 window/energy_saving/keep_screen_on=false
 window/stretch/mode="canvas_items"
 window/per_pixel_transparency/allowed=true
+
+[dotnet]
+
+project/assembly_name="百川HUB"
 
 [input]
 

@@ -17,10 +17,11 @@ signal operation_finished(success: bool)
 
 @onready var n_tab_container: TabContainer = $TabContainer as TabContainer
 @onready var n_tabs: Dictionary[Tabs, Control] = {
-	Tabs.WELCOME: $TabContainer/Welcome as Control,
-	Tabs.EULA: $TabContainer/EULA as Control,
-	Tabs.INSTALLER: $TabContainer/Installer as Control,
-	Tabs.DOCS: $TabContainer/Docs as Control,
+	Tabs.WELCOME: $TabContainer/Welcome as VBoxContainer,
+	Tabs.EULA: $TabContainer/EULA as VBoxContainer,
+	Tabs.LAUNCHER: $TabContainer/Launcher as VBoxContainer,
+	Tabs.INSTALLER: $TabContainer/Installer as ScrollContainer,
+	Tabs.DOCS: $TabContainer/Docs as VBoxContainer,
 }
 @onready var n_installer_tab_container: TabContainer = $TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs as TabContainer
 @onready var n_installer_tabs: Dictionary[InstallerTabs, Control] = {
@@ -53,13 +54,16 @@ signal operation_finished(success: bool)
 @onready var n_docs_object_list_hbox: HBoxContainer = $TabContainer/Docs/HBoxContainer/List/ObjectList/HBox as HBoxContainer
 @onready var n_docs_text_view: RichTextLabel = $TabContainer/Docs/HBoxContainer/TextView as RichTextLabel
 
+@onready var n_launcher
+
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 921)
 enum Tabs{
 	WELCOME = 0, #欢迎
 	EULA = 1, #最终用户许可协议
-	INSTALLER = 2, #安装器
-	DOCS = 3, #文档
+	LAUNCHER = 2, #启动器
+	INSTALLER = 3, #安装器
+	DOCS = 4, #文档
 }
 enum InstallerTabs{
 	INSTALL = 0, #安装
@@ -74,6 +78,7 @@ enum GameInfoState{
 const TabsNames: PackedStringArray = [
 	"欢迎",
 	"使用协议",
+	"启动器",
 	"安装器",
 	"常见问题查询(开发中)"
 ]
@@ -95,6 +100,7 @@ static var use_builtin_pack: bool = true
 var is_eula_agreed: bool = false:
 	set(value):
 		if (value and is_node_ready()):
+			n_tab_container.set_tab_disabled(Tabs.LAUNCHER, false) #解锁启动器
 			n_tab_container.set_tab_disabled(Tabs.INSTALLER, false) #解锁安装器
 			#n_tab_container.set_tab_disabled(Tabs.DOCS, false) #解锁文档
 		is_eula_agreed = value
@@ -138,6 +144,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	n_tab_container.current_tab = 0
+	n_tab_container.set_tab_disabled(Tabs.LAUNCHER, true)
 	n_tab_container.set_tab_disabled(Tabs.INSTALLER, true)
 	n_tab_container.set_tab_disabled(Tabs.DOCS, true)
 	n_tab_container.get_tab_bar().mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -380,7 +387,8 @@ func update_install_confirm_button() -> void:
 ## 欢迎/继续
 func welcome_continue() -> void:
 	if (is_eula_agreed): #如果已同意EULA
-		n_tab_container.current_tab = Tabs.INSTALLER #将主选项卡焦点切换到安装器
+		#n_tab_container.current_tab = Tabs.INSTALLER #将主选项卡焦点切换到安装器
+		n_tab_container.current_tab = Tabs.LAUNCHER #将主选项卡焦点切换到启动器
 	else: #否则(未同意EULA)
 		n_tab_container.current_tab = Tabs.EULA #将主选项卡焦点切换到EULA
 

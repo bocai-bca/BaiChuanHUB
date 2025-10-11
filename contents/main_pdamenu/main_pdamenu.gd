@@ -41,6 +41,7 @@ func _ready() -> void:
 	var y_multi: float = float(window.size.y) / float(DisplayServer.screen_get_size(DisplayServer.get_primary_screen()).y)
 	var use_multi: float = 1.0 / maxf(x_multi, y_multi)
 	window.size = Vector2i(window.size * use_multi * WINDOW_SIZE_OF_SCREEN)
+	window.position /= 2.0
 	#n_grab_area.size = GRAB_AREA_SIZE_OF_VIEWPORT * Vector2(window.size)
 	#n_grab_area.position = GRAB_AREA_POS_OF_VIEWPORT * Vector2(window.size)
 	#($WindowButton as HBoxContainer).size = WINDOW_BUTTON_SIZE_OF_VIEWPORT * Vector2(window.size)
@@ -64,7 +65,7 @@ func _ready() -> void:
 	## /00
 	## 01声音订阅信号
 	($Main_EarlyMenu/TabContainer as TabContainer).tab_changed.connect(
-		func(i: int) -> void:
+		func(_i: int) -> void:
 			n_audio_click_large.play()
 	)
 	#($Main_EarlyMenu/TabContainer/Welcome/ContinueButton as Button).pressed.connect(n_audio_click_medium.play)
@@ -78,17 +79,17 @@ func _ready() -> void:
 			n_audio_error.play()
 	)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs as TabContainer).tab_changed.connect(
-		func(i: int) -> void:
+		func(_i: int) -> void:
 			n_audio_click_large.play()
 	)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo/Refresh as Button).pressed.connect(n_audio_click_medium.play)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ReinstallCheck as CheckBox).pressed.connect(n_audio_click_small.play)
 	n_earlymenu.install_option_difficult_clicked.connect(
-		func(index: int) -> void:
+		func(_index: int) -> void:
 			n_audio_click_small.play()
 	)
 	n_earlymenu.install_option_addon_clicked.connect(
-		func(index: int) -> void:
+		func(_index: int) -> void:
 			n_audio_click_small.play()
 	)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall as Button).pressed.connect(n_audio_click_medium.play)
@@ -105,12 +106,12 @@ func _ready() -> void:
 	## /01
 	n_audio_open.play()
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if (mouse_grabbing):
 		var window: Window = get_window()
 		window.position = (DisplayServer.mouse_get_position() - mouse_pos_on_grab) + window_pos_on_grab
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	n_earlymenu.position = size * SUBMENU_POS_RATE
 	n_earlymenu.size = size * SUBMENU_SIZE_RATE
 
