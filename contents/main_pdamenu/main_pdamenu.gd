@@ -52,7 +52,7 @@ func _ready() -> void:
 	#n_earlymenu.scale = EARLY_MENU_SCALE_DEFAULT / use_multi * WINDOW_SIZE_OF_SCREEN
 	#n_earlymenu.position = EARLY_MENU_POS_OF_VIEWPORT * Vector2(window.size)
 	## 00主题修补
-	($Main_EarlyMenu/TabContainer/Welcome/TextureRect as TextureRect).texture = preload("res://contents/main_pdamenu/welcome_picture_0_blur.png")
+	($Main_EarlyMenu/TabContainer/Welcome/PanelContainer/TextureRect as TextureRect).texture = preload("res://contents/main_pdamenu/welcome_picture_0_blur.png")
 	($Main_EarlyMenu/TabContainer/EULA/MarginContainer/RichTextLabel as RichTextLabel).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer as ScrollContainer).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer/ScrollContainer as ScrollContainer).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())

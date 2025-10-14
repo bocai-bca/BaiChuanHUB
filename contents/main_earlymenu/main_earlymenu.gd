@@ -8,6 +8,10 @@ signal game_location_autofind(success: bool)
 signal install_option_difficult_clicked(index: int)
 ## 信号-安装选项任意一个附属包按钮被点击时发出，附带被点击的按钮的索引
 signal install_option_addon_clicked(index: int)
+## 信号-启动选项任意一个难度按钮被点击时发出，附带被点击的按钮的索引
+signal launch_option_difficult_clicked(index: int)
+## 信号-启动选项任意一个附属包按钮被点击时发出，附带被点击的按钮的索引
+signal launch_option_addon_clicked(index: int)
 ## 信号-日志中出现新警告时发出
 signal new_warn()
 ## 信号-日志中出现新错误时发出
@@ -53,8 +57,11 @@ signal operation_finished(success: bool)
 #@onready var n_docs_object_list: ScrollContainer = $TabContainer/Docs/HBoxContainer/List/ObjectList as ScrollContainer
 @onready var n_docs_object_list_hbox: HBoxContainer = $TabContainer/Docs/HBoxContainer/List/ObjectList/HBox as HBoxContainer
 @onready var n_docs_text_view: RichTextLabel = $TabContainer/Docs/HBoxContainer/TextView as RichTextLabel
-
-@onready var n_launcher
+@onready var n_launcher_select_difficult_container:VBoxContainer = $TabContainer/Launcher/VBC/HBC/VBC_SelectDifficult/SC/VBC as VBoxContainer
+@onready var n_launcher_select_addons_container:VBoxContainer = $TabContainer/Launcher/VBC/HBC/VBC_SelectAddon/SC/VBC as VBoxContainer
+@onready var n_launcher_pack_info: Label = $TabContainer/Launcher/VBC/Label as Label
+@onready var n_launcher_unavailable_text: Label = $TabContainer/Launcher/UnavailableText as Label
+@onready var n_launcher_total_vbc: VBoxContainer = $TabContainer/Launcher/VBC as VBoxContainer
 
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 921)
@@ -128,6 +135,14 @@ var install_option_addons_nodes: Array[EarlyMenu_AddonSelectCheckBox] = []
 var install_option_difficult_current: int = -1
 ## 当前勾选的所有待安装附属包索引号
 var install_option_addons_current: PackedInt32Array = []
+## 启动选项难度节点列表
+var launch_option_difficults_nodes: Array[EarlyMenu_DifficultSelectCheckBox] = []
+## 启动选项附属包节点列表
+var launch_option_addons_nodes: Array[EarlyMenu_AddonSelectCheckBox] = []
+## 当前指定的启动难度索引号，-1代表无效
+var launch_option_difficult_current: int = -1
+## 当前勾选的所有参与启动的附属包索引号
+var launch_option_addons_current: PackedInt32Array = []
 ## 安装选项重新安装
 var install_option_reinstall: bool = false
 ## 安装器是否正在执行某个操作(如安装、卸载)
@@ -159,8 +174,25 @@ func _ready() -> void:
 		var load_path: String = OS.get_executable_path().get_base_dir().path_join("pack")
 		print("加载捆绑式安装包：", load_path)
 		load_install_pack(load_path)
+		if (is_pack_load_success):
+			n_launcher_total_vbc.visible = true
+			n_launcher_unavailable_text.visible = false
+			if (not BaiChuanLauncher.is_builtin_game_dir_exist()):
+				n_launcher_total_vbc.visible = false
+				n_launcher_unavailable_text.visible = true
+				n_launcher_unavailable_text.text = "无法使用启动器\n未找到一体游戏启动目录"
+		else:
+			n_launcher_total_vbc.visible = false
+			n_launcher_unavailable_text.visible = true
+			n_launcher_unavailable_text.text = "无法使用启动器\n安装包加载失败"
 		place_install_option_nodes()
+		place_launch_option_nodes()
 		update_install_confirm_button()
+		update_launch_confirm_button()
+	else:
+		n_launcher_unavailable_text.text = "无法使用启动器\n启动器必须使用捆绑式安装包"
+		n_launcher_unavailable_text.visible = true
+		n_launcher_total_vbc.visible = false
 
 func _physics_process(_delta: float) -> void:
 	if (is_operating):
@@ -345,6 +377,53 @@ func place_install_option_nodes() -> void:
 		n_operation_install_option_addons_container.add_child(new_check_box)
 	## /01
 
+## 放置启动选项节点
+func place_launch_option_nodes() -> void:
+	## 00清除旧节点
+	for node in launch_option_difficults_nodes + launch_option_addons_nodes: #遍历所有选项
+		node.queue_free()
+	launch_option_difficults_nodes = []
+	launch_option_addons_nodes = []
+	## /00
+	## 01放置新节点
+	if (meta_report == null): #如果元数据报告为null
+		return
+	for i in meta_report.difficults_names.size(): #按索引遍历所有难度名称
+		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate() as EarlyMenu_DifficultSelectCheckBox
+		new_check_box.text = meta_report.difficults_names[i]
+		new_check_box.difficult_index = i
+		new_check_box.pressed.connect(
+			func() -> void:
+				launch_option_difficult_current = new_check_box.difficult_index
+				update_launch_addons_checkboxes_disable()
+				update_launch_confirm_button()
+				emit_signal(&"launch_option_difficult_clicked", i)
+		)
+		launch_option_difficults_nodes.append(new_check_box)
+		n_launcher_select_difficult_container.add_child(new_check_box)
+	for i in meta_report.addons.size(): #按索引遍历所有附属包名称
+		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate() as EarlyMenu_AddonSelectCheckBox
+		new_check_box.text = meta_report.addons[i].name
+		new_check_box.addon_index = i
+		new_check_box.support_difficults = meta_report.addons[i].support_difficults
+		new_check_box.pressed.connect(
+			func() -> void:
+				if (new_check_box.button_pressed): #如果按钮处于按下状态(正被勾选)
+					if (not launch_option_addons_current.has(new_check_box.addon_index)): #如果附属包待安装列表里没记录本按钮的索引
+						launch_option_addons_current.append(new_check_box.addon_index) #将本按钮的索引添加到附属包待安装列表
+				else: #否则(按钮不处于按下状态(未被勾选))
+					while (launch_option_addons_current.has(new_check_box.addon_index)): #循环直到附属包待安装列表里不再有记录本按钮的索引
+						var find_result: int = launch_option_addons_current.find(new_check_box.addon_index)
+						if (find_result == -1):
+							break
+						launch_option_addons_current.remove_at(find_result)
+				update_launch_confirm_button()
+				emit_signal(&"launch_option_addon_clicked", i)
+		)
+		launch_option_addons_nodes.append(new_check_box)
+		n_launcher_select_addons_container.add_child(new_check_box)
+	## /01
+
 ## 更新附属包禁用(基于当前所选的难度，如果当前没有所选难度，将启用所有支持通配难度的附属包)
 func update_install_addons_checkboxes_disable() -> void:
 	for checkbox in install_option_addons_nodes: #遍历所有附属包节点
@@ -359,6 +438,21 @@ func update_install_addons_checkboxes_disable() -> void:
 				if (find_result == -1):
 					break
 				install_option_addons_current.remove_at(find_result)
+
+## 启动器更新附属包禁用
+func update_launch_addons_checkboxes_disable() -> void:
+	for checkbox in launch_option_addons_nodes: #遍历所有启动附属包节点
+		if (checkbox.if_difficult_disable(launch_option_difficult_current)): #调用按钮的自禁用检查方法，并获取执行之后按钮的开关状态
+			## 正被勾选
+			if (not launch_option_addons_current.has(checkbox.addon_index)): #如果附属包启动列表里没记录本按钮的索引
+				launch_option_addons_current.append(checkbox.addon_index) #将本按钮的索引添加到附属包启动列表
+		else:
+			## 未被勾选或因被禁用而关闭
+			while (launch_option_addons_current.has(checkbox.addon_index)): #循环直到附属包启动列表里不再有记录本按钮的索引
+				var find_result: int = launch_option_addons_current.find(checkbox.addon_index)
+				if (find_result == -1):
+					break
+				launch_option_addons_current.remove_at(find_result)
 
 ## 更新安装确认按钮
 func update_install_confirm_button() -> void:
@@ -382,6 +476,11 @@ func update_install_confirm_button() -> void:
 		n_operation_install_confirm_button.disabled = true
 		n_operation_install_confirm_button.text = "请选择难度"
 		n_operation_install_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
+
+## 更新启动确认按钮
+func update_launch_confirm_button() -> void:
+	if (is_operating):
+		return
 
 #region 界面元素触发函数
 ## 欢迎/继续

@@ -25,12 +25,24 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="TextureRect" type="TextureRect" parent="TabContainer/Welcome"]
+[node name="PanelContainer" type="PanelContainer" parent="TabContainer/Welcome"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="TabContainer/Welcome/PanelContainer"]
+layout_mode = 2
 texture = ExtResource("3_x8ole")
 expand_mode = 1
 stretch_mode = 6
+
+[node name="Label" type="Label" parent="TabContainer/Welcome/PanelContainer"]
+custom_minimum_size = Vector2(1, 0)
+layout_mode = 2
+text = "欢迎来到百川归海。
+
+安装提示：
+杀毒软件可能导致百川HUB不能正常进行启动或安装操作，而百川HUB自身无法察觉。如果发生问题，可优先考虑从杀毒软件排查。"
+autowrap_mode = 3
 
 [node name="ContinueButton" type="Button" parent="TabContainer/Welcome"]
 layout_mode = 2
@@ -99,12 +111,92 @@ layout_mode = 2
 metadata/_tab_index = 2
 
 [node name="UnavailableText" type="Label" parent="TabContainer/Launcher"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 6
 text = "无法使用启动器
-未在百川HUB相同位置找到游戏本体包或解析失败"
+未在百川HUB相同位置找到游戏本体包或安装包解析失败"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="VBC" type="VBoxContainer" parent="TabContainer/Launcher"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="TabContainer/Launcher/VBC"]
+modulate = Color(0, 1, 0, 1)
+layout_mode = 2
+text = "版本9.8.7(v11451.4)，包含10个难度、230个模组、0个附属包"
+horizontal_alignment = 1
+
+[node name="HBC" type="HBoxContainer" parent="TabContainer/Launcher/VBC"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBC_SelectDifficult" type="VBoxContainer" parent="TabContainer/Launcher/VBC/HBC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectDifficult"]
+layout_mode = 2
+text = "难度"
+horizontal_alignment = 1
+
+[node name="SC" type="ScrollContainer" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectDifficult"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="VBC" type="VBoxContainer" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectDifficult/SC"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBC_SelectAddon" type="VBoxContainer" parent="TabContainer/Launcher/VBC/HBC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectAddon"]
+layout_mode = 2
+text = "附属包"
+horizontal_alignment = 1
+
+[node name="SC" type="ScrollContainer" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectAddon"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="VBC" type="VBoxContainer" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectAddon/SC"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBC_LogAndConfirm" type="VBoxContainer" parent="TabContainer/Launcher/VBC/HBC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
+layout_mode = 2
+text = "日志"
+horizontal_alignment = 1
+
+[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TabBar" type="TabBar" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
+layout_mode = 2
+current_tab = 0
+tab_alignment = 1
+tab_count = 2
+tab_0/title = "安装法"
+tab_1/title = "链接法"
+
+[node name="Button" type="Button" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
+layout_mode = 2
+size_flags_vertical = 3
+disabled = true
+text = "请选择启动难度"
 
 [node name="Installer" type="ScrollContainer" parent="TabContainer"]
 visible = false

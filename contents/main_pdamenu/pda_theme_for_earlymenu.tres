@@ -163,9 +163,6 @@ draw_center = false
 bg_color = Color(0, 0, 0, 0)
 draw_center = false
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wcooa"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rf6hw"]
 content_margin_left = 25.0
 content_margin_top = 15.0
@@ -247,6 +244,9 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wcooa"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wcooa"]
 texture = ExtResource("2_hx3lu")
@@ -339,6 +339,11 @@ RichTextLabel/colors/font_outline_color = Color(0, 0.4, 1, 0.498039)
 RichTextLabel/constants/outline_size = 5
 RichTextLabel/styles/focus = SubResource("StyleBoxFlat_nkesa")
 RichTextLabel/styles/normal = SubResource("StyleBoxFlat_yic3q")
+TabBar/styles/tab_disabled = SubResource("StyleBoxFlat_rf6hw")
+TabBar/styles/tab_focus = SubResource("StyleBoxFlat_85vo2")
+TabBar/styles/tab_hovered = SubResource("StyleBoxFlat_85n8b")
+TabBar/styles/tab_selected = SubResource("StyleBoxFlat_v5bi0")
+TabBar/styles/tab_unselected = SubResource("StyleBoxFlat_hx3lu")
 TabContainer/colors/font_disabled_color = Color(0.6, 0.6, 0.6, 1)
 TabContainer/colors/font_selected_color = Color(1, 1, 1, 1)
 TabContainer/colors/font_unselected_color = Color(1, 1, 1, 1)
