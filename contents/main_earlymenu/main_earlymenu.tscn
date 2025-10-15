@@ -136,6 +136,7 @@ size_flags_vertical = 3
 [node name="VBC_SelectDifficult" type="VBoxContainer" parent="TabContainer/Launcher/VBC/HBC"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.6
 
 [node name="Label" type="Label" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectDifficult"]
 layout_mode = 2
@@ -155,6 +156,7 @@ size_flags_vertical = 3
 [node name="VBC_SelectAddon" type="VBoxContainer" parent="TabContainer/Launcher/VBC/HBC"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.8
 
 [node name="Label" type="Label" parent="TabContainer/Launcher/VBC/HBC/VBC_SelectAddon"]
 layout_mode = 2
@@ -180,21 +182,38 @@ layout_mode = 2
 text = "日志"
 horizontal_alignment = 1
 
-[node name="RichTextLabel" type="RichTextLabel" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
+[node name="Log" type="RichTextLabel" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
 layout_mode = 2
 size_flags_vertical = 3
+focus_mode = 2
+theme_override_font_sizes/normal_font_size = 20
+theme_override_font_sizes/bold_font_size = 20
+theme_override_font_sizes/bold_italics_font_size = 20
+theme_override_font_sizes/italics_font_size = 20
+theme_override_font_sizes/mono_font_size = 20
+bbcode_enabled = true
+scroll_following = true
+autowrap_mode = 1
+selection_enabled = true
 
 [node name="TabBar" type="TabBar" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
 layout_mode = 2
+mouse_default_cursor_shape = 2
 current_tab = 0
 tab_alignment = 1
 tab_count = 2
 tab_0/title = "安装法"
 tab_1/title = "链接法"
 
+[node name="MethodTip" type="Label" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "安装方法提示文本"
+
 [node name="Button" type="Button" parent="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm"]
 layout_mode = 2
 size_flags_vertical = 3
+mouse_default_cursor_shape = 8
 disabled = true
 text = "请选择启动难度"
 
@@ -283,7 +302,7 @@ alignment = 1
 [node name="InstallInfo" type="VBoxContainer" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 0.5
+size_flags_stretch_ratio = 0.4
 
 [node name="PanelTitle" type="Label" parent="TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo"]
 layout_mode = 2
@@ -548,6 +567,8 @@ horizontal_alignment = 1
 [connection signal="pressed" from="TabContainer/Welcome/ContinueButton" to="." method="welcome_continue"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/RejectButton" to="." method="eula_reject"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/AgreeButton" to="." method="eula_agree"]
+[connection signal="tab_changed" from="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/TabBar" to="." method="launcher_change_method"]
+[connection signal="pressed" from="TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/Button" to="." method="launcher_confirm"]
 [connection signal="focus_exited" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/LineEditGameLocation" to="." method="installer_gamepath_lose_focus"]
 [connection signal="text_submitted" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/LineEditGameLocation" to="." method="installer_gamepath_submit"]
 [connection signal="pressed" from="TabContainer/Installer/MarginContainer/VBoxContainer/GameLocation/AutoFindButton" to="." method="installer_auto_find_game"]

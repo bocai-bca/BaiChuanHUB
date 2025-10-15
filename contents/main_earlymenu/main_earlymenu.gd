@@ -62,6 +62,9 @@ signal operation_finished(success: bool)
 @onready var n_launcher_pack_info: Label = $TabContainer/Launcher/VBC/Label as Label
 @onready var n_launcher_unavailable_text: Label = $TabContainer/Launcher/UnavailableText as Label
 @onready var n_launcher_total_vbc: VBoxContainer = $TabContainer/Launcher/VBC as VBoxContainer
+@onready var n_launcher_method_tip: Label = $TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/MethodTip as Label
+@onready var n_launcher_confirm_button: Button = $TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/Button as Button
+@onready var n_launcher_log: RichTextLabel = $TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/Log as RichTextLabel
 
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 921)
@@ -93,6 +96,10 @@ const InstallerOperationTabsNames: PackedStringArray = [
 	"安装",
 	"卸载",
 	"文件校验",
+]
+const LauncherMethodTipText: PackedStringArray = [
+	"启动速度较慢，通常没啥好处", #安装法
+	"启动速度非常快、不额外占据硬盘", #链接法
 ]
 ## 安装选项的难度按钮组
 const DIFFICULT_BUTTON_GROUP: ButtonGroup = preload("res://contents/main_earlymenu/difficult_button_group.tres")
@@ -177,10 +184,10 @@ func _ready() -> void:
 		if (is_pack_load_success):
 			n_launcher_total_vbc.visible = true
 			n_launcher_unavailable_text.visible = false
-			if (not BaiChuanLauncher.is_builtin_game_dir_exist()):
+			if (not BaiChuanLauncher.is_builtin_game_exist()):
 				n_launcher_total_vbc.visible = false
 				n_launcher_unavailable_text.visible = true
-				n_launcher_unavailable_text.text = "无法使用启动器\n未找到一体游戏启动目录"
+				n_launcher_unavailable_text.text = "无法使用启动器\n未找到启动器一体游戏文件"
 		else:
 			n_launcher_total_vbc.visible = false
 			n_launcher_unavailable_text.visible = true
@@ -193,6 +200,7 @@ func _ready() -> void:
 		n_launcher_unavailable_text.text = "无法使用启动器\n启动器必须使用捆绑式安装包"
 		n_launcher_unavailable_text.visible = true
 		n_launcher_total_vbc.visible = false
+	n_launcher_method_tip.text = LauncherMethodTipText[0]
 
 func _physics_process(_delta: float) -> void:
 	if (is_operating):
@@ -313,6 +321,8 @@ func load_install_pack(pack_path: String) -> void:
 			is_pack_load_success = true
 			n_mod_pack_tip_text.text = "捆绑式安装包就绪：版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
 			n_mod_pack_tip_text.modulate = Color.GREEN
+			n_launcher_pack_info.text = "版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
+			n_launcher_pack_info.modulate = Color.GREEN
 		false:
 			if (not FileAccess.file_exists(pack_path)): #如果文件不存在
 				n_mod_pack_tip_text.text = "路径指向的文件不存在或不可见"
@@ -390,6 +400,7 @@ func place_launch_option_nodes() -> void:
 		return
 	for i in meta_report.difficults_names.size(): #按索引遍历所有难度名称
 		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate() as EarlyMenu_DifficultSelectCheckBox
+		new_check_box.button_group = preload("res://contents/main_earlymenu/difficult_button_group_launcher.tres")
 		new_check_box.text = meta_report.difficults_names[i]
 		new_check_box.difficult_index = i
 		new_check_box.pressed.connect(
@@ -481,6 +492,14 @@ func update_install_confirm_button() -> void:
 func update_launch_confirm_button() -> void:
 	if (is_operating):
 		return
+	if (launch_option_difficult_current != -1):
+		n_launcher_confirm_button.disabled = false
+		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		n_launcher_confirm_button.text = "启动\n" + meta_report.version_name + "、" + meta_report.difficults_names[launch_option_difficult_current] + "、" + str(launch_option_addons_current.size()) + "个附属包"
+	else:
+		n_launcher_confirm_button.disabled = true
+		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
+		n_launcher_confirm_button.text = "请选择启动难度"
 
 #region 界面元素触发函数
 ## 欢迎/继续
@@ -608,6 +627,14 @@ func installer_packpath_lose_focus() -> void:
 	#installer_packpath_submit("")
 	pass
 
+## 启动器变更启动方式
+func launcher_change_method(_tab: int) -> void:
+	n_launcher_method_tip.text = LauncherMethodTipText[_tab]
+
+## 启动器确认启动
+func launcher_confirm() -> void:
+	pass
+
 ## 刷新日志，在任何(可能)能够影响日志的菜单元素被触发以后均调用此方法，由其他连接了信号的方法调用
 func refresh_log() -> void:
 	installer.mutex.lock()
@@ -616,5 +643,6 @@ func refresh_log() -> void:
 	if (installer.log_error_count > 0):
 		emit_signal(&"new_error")
 	n_log_text.text = installer.log_string #将安装器的日志内容传递到本实例
+	n_launcher_log.text = installer.log_string
 	installer.mutex.unlock()
 #endregion

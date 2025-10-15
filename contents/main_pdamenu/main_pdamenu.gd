@@ -57,6 +57,7 @@ func _ready() -> void:
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/DifficultContainer/ScrollContainer as ScrollContainer).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/HBoxContainer/AddonsContainer/ScrollContainer as ScrollContainer).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/Log/LogText as RichTextLabel).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
+	($Main_EarlyMenu/TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/Log as RichTextLabel).get_v_scroll_bar().add_child(PDAMenu_ScrollCenter.CPS.instantiate())
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify as Button).add_theme_stylebox_override(&"normal", preload("res://contents/main_pdamenu/stylebox_for_installer_select_checks.tres"))
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify as Button).add_theme_stylebox_override(&"hover", preload("res://contents/main_pdamenu/stylebox_hover_for_installer_select_checks.tres"))
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/FileVerify/StartVerify as Button).add_theme_stylebox_override(&"pressed", preload("res://contents/main_pdamenu/stylebox_pressed_for_installer_select_checks.tres"))
@@ -78,20 +79,18 @@ func _ready() -> void:
 				return
 			n_audio_error.play()
 	)
-	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs as TabContainer).tab_changed.connect(
-		func(_i: int) -> void:
-			n_audio_click_large.play()
-	)
+	var click_medium_audio_play: Callable = func(_i: int) -> void:
+		n_audio_click_medium.play()
+	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs as TabContainer).tab_changed.connect(click_medium_audio_play)
+	($Main_EarlyMenu/TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/TabBar as TabBar).tab_changed.connect(click_medium_audio_play)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/InstallInfo/Refresh as Button).pressed.connect(n_audio_click_medium.play)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ReinstallCheck as CheckBox).pressed.connect(n_audio_click_small.play)
-	n_earlymenu.install_option_difficult_clicked.connect(
-		func(_index: int) -> void:
-			n_audio_click_small.play()
-	)
-	n_earlymenu.install_option_addon_clicked.connect(
-		func(_index: int) -> void:
-			n_audio_click_small.play()
-	)
+	var click_small_audio_play: Callable = func(_index: int) -> void:
+		n_audio_click_small.play()
+	n_earlymenu.install_option_difficult_clicked.connect(click_small_audio_play)
+	n_earlymenu.install_option_addon_clicked.connect(click_small_audio_play)
+	n_earlymenu.launch_option_difficult_clicked.connect(click_small_audio_play)
+	n_earlymenu.launch_option_addon_clicked.connect(click_small_audio_play)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Install/ConfirmInstall as Button).pressed.connect(n_audio_click_medium.play)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/CheckBox as CheckBox).pressed.connect(n_audio_click_small.play)
 	($Main_EarlyMenu/TabContainer/Installer/MarginContainer/VBoxContainer/ConsolePanel/OperationSelect/OperationTabs/Uninstall/ConfirmUninstall as Button).pressed.connect(n_audio_click_medium.play)

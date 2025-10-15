@@ -5,8 +5,10 @@ class_name BaiChuanLauncher
 const GAME_DIR: String = "game"
 const GAME_NAME: String = "Subnautica.exe"
 
-static func is_builtin_game_dir_exist() -> bool:
-	var this_dir: DirAccess = DirAccess.open(OS.get_executable_path())
-	if (this_dir.dir_exists(GAME_DIR)):
+static func is_builtin_game_exist() -> bool:
+	var this_dir: DirAccess = DirAccess.open(OS.get_executable_path().get_base_dir())
+	if (this_dir == null):
+		push_error("BaiChuanLauncher: 打开目录失败，原因=", DirAccess.get_open_error())
+	if (this_dir.file_exists(GAME_DIR.path_join(GAME_NAME))):
 		return true
 	return false
