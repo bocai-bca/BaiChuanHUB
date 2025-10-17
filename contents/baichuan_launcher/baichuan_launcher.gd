@@ -42,7 +42,7 @@ static func run_game() -> void:
 	logger.log_info("正在启动游戏")
 	var absolute_path: String = OS.get_executable_path().get_base_dir().path_join(GAME_DIR).path_join(GAME_NAME)
 	if (FileAccess.file_exists(absolute_path)):
-		var pid: int = OS.create_process(absolute_path, [])
+		var pid: int = OS.create_process(absolute_path, ["-vrmode", "none"])
 		if (pid == -1):
 			logger.log_error("BaiChuanLauncher: 未能获取进程PID，进程可能启动失败")
 		else:

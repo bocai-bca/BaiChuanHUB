@@ -53,9 +53,9 @@ signal operation_finished(success: bool)
 @onready var n_docs_pack_not_loaded_label: Label = $TabContainer/Docs/PackNotLoaded as Label
 @onready var n_docs_menu_container: HBoxContainer = $TabContainer/Docs/HBoxContainer as HBoxContainer
 @onready var n_docs_info_text: Label = $TabContainer/Docs/InfoText as Label
-@onready var n_docs_search: LineEdit = $TabContainer/Docs/HBoxContainer/List/SearchLineEdit as LineEdit
+@onready var n_docs_search: LineEdit = $TabContainer/Docs/HBoxContainer/SideList/Search/SearchLineEdit as LineEdit
 #@onready var n_docs_object_list: ScrollContainer = $TabContainer/Docs/HBoxContainer/List/ObjectList as ScrollContainer
-@onready var n_docs_object_list_hbox: HBoxContainer = $TabContainer/Docs/HBoxContainer/List/ObjectList/HBox as HBoxContainer
+@onready var n_docs_object_list_hbox: HBoxContainer = $TabContainer/Docs/HBoxContainer/SideList/Search/ObjectList/HBox as HBoxContainer
 @onready var n_docs_text_view: RichTextLabel = $TabContainer/Docs/HBoxContainer/TextView as RichTextLabel
 @onready var n_launcher_select_difficult_container:VBoxContainer = $TabContainer/Launcher/VBC/HBC/VBC_SelectDifficult/SC/VBC as VBoxContainer
 @onready var n_launcher_select_addons_container:VBoxContainer = $TabContainer/Launcher/VBC/HBC/VBC_SelectAddon/SC/VBC as VBoxContainer
@@ -170,8 +170,10 @@ var launch_option_difficult_current: int = -1
 var launch_option_addons_current: PackedInt32Array = []
 ## 安装选项重新安装
 var install_option_reinstall: bool = false
-## 安装器是否正在执行某个操作(如安装、卸载)
+## 安装器/启动器是否正在执行某个操作(如安装、卸载)
 var is_operating: bool = false
+## 当前是否是启动器正在执行操作
+var is_launcher_activiting: bool = false
 
 func _notification(what: int) -> void:
 	match (what):
@@ -233,7 +235,11 @@ func _physics_process(_delta: float) -> void:
 			n_operation_install_confirm_button.disabled = false
 			n_operation_uninstall_confirm_button.disabled = false
 			n_launcher_confirm_button.disabled = false
-			refresh_game_info()
+			if (is_launcher_activiting):
+				refresh_game_info_path(OS.get_executable_path().get_base_dir().path_join(BaiChuanLauncher.GAME_DIR).path_join(BaiChuanLauncher.GAME_NAME))
+				is_launcher_activiting = false
+			else:
+				refresh_game_info()
 			emit_signal(&"operation_finished", installer.thread.wait_to_finish())
 
 ## 程序关闭方法，此方法中要写临时目录的释放行为
@@ -260,9 +266,13 @@ func show_game_info() -> void:
 	n_state_refresh_button.visible = true
 	refresh_game_info()
 
-## 刷新游戏状态信息
+## 不需要给定路径的刷新游戏状态信息，路径将从输入框获取
 func refresh_game_info() -> void:
-	var game_state_report: BaiChuanInstaller.GameStateReport = installer.game_state_detect(n_line_edit_game_location.text)
+	refresh_game_info_path(n_line_edit_game_location.text)
+
+## 刷新游戏状态信息
+func refresh_game_info_path(path: String) -> void:
+	var game_state_report: BaiChuanInstaller.GameStateReport = installer.game_state_detect(path)
 	var text: String = "游戏版本验证\n[right]{0}[/right]\nBepInEx存在迹象\n[right]{1}[/right]\nQMods存在迹象\n[right]{2}[/right]\n百川安装状况\n[right]{3}[/right]"
 	var text_version_verify: String
 	match (game_state_report.game_version_verify): #匹配状态报告的游戏版本验证部分
@@ -674,6 +684,7 @@ func launcher_change_method(_tab: int) -> void:
 ## 启动器确认启动
 func launcher_confirm() -> void:
 	is_operating = true
+	is_launcher_activiting = true
 	n_operation_install_confirm_button.disabled = true
 	n_operation_uninstall_confirm_button.disabled = true
 	n_launcher_confirm_button.disabled = true
