@@ -65,6 +65,7 @@ signal operation_finished(success: bool)
 @onready var n_launcher_method_tip: Label = $TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/MethodTip as Label
 @onready var n_launcher_confirm_button: Button = $TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/Button as Button
 @onready var n_launcher_log: RichTextLabel = $TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/Log as RichTextLabel
+@onready var n_launcher_method_select: TabBar = $TabContainer/Launcher/VBC/HBC/VBC_LogAndConfirm/TabBar as TabBar
 
 ## 最小窗口大小
 const WINDOW_MIN_SIZE: Vector2i = Vector2i(1280, 921)
@@ -85,6 +86,11 @@ enum GameInfoState{
 	NOT_FOUND, #未指定位置
 	PATH_UNVALID, #指定的位置不可用
 }
+## 启动器启动方法，需要对应TabBar节点的选项卡
+enum LauncherMethod{
+	INSTALL = 0, #安装法
+	MKLINK = 1, #链接法
+}
 const TabsNames: PackedStringArray = [
 	"欢迎",
 	"使用协议",
@@ -97,9 +103,18 @@ const InstallerOperationTabsNames: PackedStringArray = [
 	"卸载",
 	"文件校验",
 ]
+## 启动方法名称，需对应LauncherMethod
+const LauncherMethodName: PackedStringArray = [
+	"安装法",
+	"链接法"
+]
 const LauncherMethodTipText: PackedStringArray = [
-	"启动速度较慢，通常没啥好处", #安装法
-	"启动速度非常快、不额外占据硬盘", #链接法
+	"基于安装器的经典老牌方法，额外使用硬盘容量\n并在启动时进行大量写入，速度略慢", #安装法
+	"基于符号链接的实验性高性能方法，不会额外使用\n硬盘容量或进行大量写入，速度略快", #链接法
+]
+const LauncherMethodUsable: Array[bool] = [
+	true, #安装法
+	false, #链接法
 ]
 ## 安装选项的难度按钮组
 const DIFFICULT_BUTTON_GROUP: ButtonGroup = preload("res://contents/main_earlymenu/difficult_button_group.tres")
@@ -109,6 +124,9 @@ static var installer: BaiChuanInstaller = BaiChuanInstaller.new()
 
 ## 使用捆绑式安装包
 static var use_builtin_pack: bool = true
+
+## 当前运行的操作系统是否支持mklink命令
+static var is_os_support_mklink_cmd: bool = false
 
 ## 是否已同意EULA
 var is_eula_agreed: bool = false:
@@ -165,6 +183,11 @@ func _enter_tree() -> void:
 	get_tree().auto_accept_quit = false #关闭自动应答退出行为
 
 func _ready() -> void:
+	BaiChuanLauncher.logger = installer.logger
+	if (OS.get_name() == "Windows"):
+		var version_alias: String = OS.get_version_alias()
+		if (version_alias.begins_with("10 ") or version_alias.begins_with("11 ")):
+			is_os_support_mklink_cmd = true
 	n_tab_container.current_tab = 0
 	n_tab_container.set_tab_disabled(Tabs.LAUNCHER, true)
 	n_tab_container.set_tab_disabled(Tabs.INSTALLER, true)
@@ -209,6 +232,7 @@ func _physics_process(_delta: float) -> void:
 			is_operating = false
 			n_operation_install_confirm_button.disabled = false
 			n_operation_uninstall_confirm_button.disabled = false
+			n_launcher_confirm_button.disabled = false
 			refresh_game_info()
 			emit_signal(&"operation_finished", installer.thread.wait_to_finish())
 
@@ -492,10 +516,21 @@ func update_install_confirm_button() -> void:
 func update_launch_confirm_button() -> void:
 	if (is_operating):
 		return
+	if (not LauncherMethodUsable[n_launcher_method_select.current_tab]):
+		n_launcher_confirm_button.disabled = true
+		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
+		n_launcher_confirm_button.text = "该方法正在开发中\n目前无法使用该启动方法"
+		return
+	## 硬编码阻止链接法在不支持的系统上可用
+	if (not is_os_support_mklink_cmd and n_launcher_method_select.current_tab == 1):
+		n_launcher_confirm_button.disabled = true
+		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
+		n_launcher_confirm_button.text = "百川HUB不支持在当前操作\n系统或运行环境使用此方法"
+		return
 	if (launch_option_difficult_current != -1):
 		n_launcher_confirm_button.disabled = false
 		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		n_launcher_confirm_button.text = "启动\n" + meta_report.version_name + "、" + meta_report.difficults_names[launch_option_difficult_current] + "、" + str(launch_option_addons_current.size()) + "个附属包"
+		n_launcher_confirm_button.text = LauncherMethodName[n_launcher_method_select.current_tab] + "启动\n" + meta_report.version_name + "、" + meta_report.difficults_names[launch_option_difficult_current] + "、" + str(launch_option_addons_current.size()) + "个附属包"
 	else:
 		n_launcher_confirm_button.disabled = true
 		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
@@ -552,6 +587,8 @@ func installer_install_reinstall_checkbox() -> void:
 func installer_install_confirm() -> void:
 	is_operating = true
 	n_operation_install_confirm_button.disabled = true
+	n_operation_uninstall_confirm_button.disabled = true
+	n_launcher_confirm_button.disabled = true
 	if (install_option_difficult_current != -1):
 		installer.multiple_threads_install(n_line_edit_game_location.text.get_base_dir(), install_option_difficult_current, install_option_addons_current, install_option_reinstall)
 	#refresh_game_info()
@@ -560,7 +597,9 @@ func installer_install_confirm() -> void:
 ## 安装器/卸载/确认卸载
 func installer_uninstall_confirm() -> void:
 	is_operating = true
+	n_operation_install_confirm_button.disabled = true
 	n_operation_uninstall_confirm_button.disabled = true
+	n_launcher_confirm_button.disabled = true
 	installer.multiple_threads_uninstall(n_line_edit_game_location.text.get_base_dir(), n_operation_uninstall_keep_framework_checkbox.button_pressed)
 	#refresh_game_info()
 	#refresh_log() #刷新日志
@@ -630,10 +669,19 @@ func installer_packpath_lose_focus() -> void:
 ## 启动器变更启动方式
 func launcher_change_method(_tab: int) -> void:
 	n_launcher_method_tip.text = LauncherMethodTipText[_tab]
+	update_launch_confirm_button()
 
 ## 启动器确认启动
 func launcher_confirm() -> void:
-	pass
+	is_operating = true
+	n_operation_install_confirm_button.disabled = true
+	n_operation_uninstall_confirm_button.disabled = true
+	n_launcher_confirm_button.disabled = true
+	match (n_launcher_method_select.current_tab):
+		LauncherMethod.INSTALL:
+			BaiChuanLauncher.launch_as_install_method(installer, launch_option_difficult_current, launch_option_addons_current)
+		LauncherMethod.MKLINK:
+			pass
 
 ## 刷新日志，在任何(可能)能够影响日志的菜单元素被触发以后均调用此方法，由其他连接了信号的方法调用
 func refresh_log() -> void:
@@ -643,6 +691,6 @@ func refresh_log() -> void:
 	if (installer.log_error_count > 0):
 		emit_signal(&"new_error")
 	n_log_text.text = installer.log_string #将安装器的日志内容传递到本实例
-	n_launcher_log.text = installer.log_string
+	n_launcher_log.text = installer.log_string #将安装器的日志内容传递到启动器日志
 	installer.mutex.unlock()
 #endregion

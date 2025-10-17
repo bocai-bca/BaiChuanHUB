@@ -178,13 +178,19 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 	return result
 
 ## 开启多线程安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，不能返回成功与否
-func multiple_threads_install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> void:
+func multiple_threads_install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool, callbacks: Array[Callable] = []) -> void:
 	if (thread.is_alive()):
 		logger.log_error("BaiChuanInstaller: 安装器繁忙，将拒绝新的安装任务")
 		return
 	if (thread.is_started()):
 		thread.wait_to_finish()
-	thread.start(install.bind(absolute_path, install_difficult, install_addons, reinstall), Thread.PRIORITY_HIGH)
+	thread.start(install_with_callback.bind(absolute_path, install_difficult, install_addons, reinstall, callbacks), Thread.PRIORITY_HIGH)
+
+## 带有回调的安装封装，用于多线程安装，给定的回调方法必须是无参数的
+func install_with_callback(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool, callbacks: Array[Callable]) -> void:
+	install(absolute_path, install_difficult, install_addons, reinstall)
+	for callback in callbacks:
+		callback.call()
 
 ## 安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，并返回成功与否
 func install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> bool:
@@ -336,14 +342,20 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	logger.log_info("安装流程结束")
 	return true
 
-## 开启多线程卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置，不能返回成功与否
-func multiple_threads_uninstall(absolute_path: String, keep_framework: bool) -> void:
+## 开启多线程卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置、在完成时执行的回调方法(回调方法必须是无参数的)，不能返回成功与否
+func multiple_threads_uninstall(absolute_path: String, keep_framework: bool, callbacks: Array[Callable] = []) -> void:
 	if (thread.is_alive()):
 		logger.log_error("BaiChuanInstaller: 安装器繁忙，将拒绝新的卸载任务")
 		return
 	if (thread.is_started()):
 		thread.wait_to_finish()
-	thread.start(uninstall.bind(absolute_path, keep_framework), Thread.PRIORITY_HIGH)
+	thread.start(uninstall_with_callback.bind(absolute_path, keep_framework, callbacks), Thread.PRIORITY_HIGH)
+
+## 带有回调的卸载封装，用于多线程卸载，给定的回调方法必须是无参数的
+func uninstall_with_callback(absolute_path: String, keep_framework: bool, callbacks: Array[Callable]) -> void:
+	uninstall(absolute_path, keep_framework)
+	for callback in callbacks:
+		callback.call()
 
 ## 卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置，并返回成功与否
 func uninstall(absolute_path: String, keep_framework: bool) -> bool:
