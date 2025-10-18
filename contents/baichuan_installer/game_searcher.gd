@@ -15,12 +15,15 @@ const STEAM_GAME_PATH: PackedStringArray = [
 ## 在给定分区中搜寻存在的深海游戏(Subnautica.exe)路径，并打包进一个紧缩字符串数组中返回，只返回可见的符合该名称的文件的路径，不保证文件可用、正确
 func search_game_path_on_drives(drivers_names: PackedStringArray) -> PackedStringArray:
 	var result: PackedStringArray = []
+	var same_dir_path: String = OS.get_executable_path().get_base_dir().path_join("Subnautica.exe")
+	if (FileAccess.file_exists(same_dir_path)):
+		result.append(same_dir_path)
+	var builtin_game_path: String = OS.get_executable_path().get_basename().path_join(BaiChuanLauncher.GAME_DIR).path_join(BaiChuanLauncher.GAME_NAME)
+	if (FileAccess.file_exists(builtin_game_path)):
+		result.append(builtin_game_path)
 	for driver_name in drivers_names: #遍历给定的分区名
 		for game_path in STEAM_GAME_PATH: #遍历已知的可能路径
 			var absolute_path: String = driver_name + game_path #合成为绝对路径
 			if (FileAccess.file_exists(absolute_path)): #如果文件存在
 				result.append(absolute_path) #将当前绝对路径添加到结果列表
-	var same_dir_path: String = OS.get_executable_path().get_base_dir().path_join("Subnautica.exe")
-	if (FileAccess.file_exists(same_dir_path)):
-		result.append(same_dir_path)
 	return result

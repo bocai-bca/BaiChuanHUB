@@ -2,6 +2,8 @@ extends RefCounted
 class_name BaiChuanInstaller
 ## 百川安装器，以动态实例形式运作
 
+## 安装器版本，用于辨识安装元数据
+const INSTALLER_VERSION: int = 1
 ## 68598版本深海迷航exe(Subnautica.exe)的已知md5值
 const SUBNAUTICA_EXE_MD5: PackedStringArray = [
 	"0fc9d3196024f686cb9cfee074fbf409",
@@ -34,6 +36,9 @@ var pack_access: BaiChuanInstaller_PackAccess = BaiChuanInstaller_PackAccess.new
 ## 脚本处理器
 var script_handler: BaiChuanInstaller_ScriptHandler = BaiChuanInstaller_ScriptHandler.new()
 
+## 连续的自动寻找失败计数，用于恶搞彩蛋
+var continuelly_autofind_failed_count: int = 0
+
 ## 搜寻游戏的高级封装，将返回一个md5匹配的绝对路径，如果寻找不到md5匹配的路径但至少找到了文件存在的路径，就返回一个该条件的路径
 func search_game() -> String:
 	logger.log_info("开始自动寻找游戏")
@@ -46,8 +51,25 @@ func search_game() -> String:
 	## /00
 	## 01输出
 	if (absolute_pathes.is_empty()): #如果为空，意味着找不到游戏
-		logger.log_warn("找不到游戏(无需重试，没用的)") #日志输出
+		match (continuelly_autofind_failed_count):
+			0, 1:
+				logger.log_warn("未找到游戏(无需重试，没用的)") #日志输出
+				continuelly_autofind_failed_count += 1
+			2:
+				logger.log_warn("我说无需重试你尔多隆吗") #日志输出
+				continuelly_autofind_failed_count += 1
+			3:
+				logger.log_warn("再点我给你下载原神") #日志输出
+				continuelly_autofind_failed_count += 1
+			_:
+				logger.log_warn("未找到游戏(无需重试，没用的)") #日志输出
+				OS.shell_open("https://ys-api.mihoyo.com/event/download_porter/link/ys_cn/official/pc_default") #打开浏览器下载原神
+				@warning_ignore("standalone_expression")
+				continuelly_autofind_failed_count == -2
 		return "" #返回一个空文本
+	else:
+		@warning_ignore("standalone_expression")
+		continuelly_autofind_failed_count == 0
 	for absolute_path in absolute_pathes: #遍历找到文件的路径列表
 		if (verify_md5(absolute_path)): #如果找到md5验证正确的文件
 			logger.log_info("找到了符合md5值的游戏文件") #日志输出
@@ -80,7 +102,7 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 		#logger.log_info("md5验证通过")
 		result.game_version_verify = GameStateReport.GameVersionVerify.VERIFY_SUCCESS
 	else: #否则(若md5验证不通过)
-		logger.log_warn("md5验证不通过")
+		#logger.log_warn("md5验证不通过")
 		result.game_version_verify = GameStateReport.GameVersionVerify.VERIFY_FAILED
 	var i: int = 0
 	if (root_dir.dir_exists("BepInEx")):
@@ -332,9 +354,14 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 		logger.log_warn("安装流程中止")
 		return false
 	var install_meta_data: Dictionary[String, Variant] = {
+		"installer_version": INSTALLER_VERSION,
+		"version": pack_access.pack_meta.version,
+		"fork_version": pack_access.pack_meta.fork_version,
 		"version_name": pack_access.pack_meta.version_name,
+		"difficult_index": install_difficult,
 		"difficult_name": pack_access.pack_meta.difficults_list[install_difficult].name,
-		"addons_count": install_addons.size()
+		"addons_count": install_addons.size(),
+		"addons_indexs": install_addons,
 	}
 	install_meta_file.store_string(JSON.stringify(install_meta_data, "\t", false, false))
 	## /05
