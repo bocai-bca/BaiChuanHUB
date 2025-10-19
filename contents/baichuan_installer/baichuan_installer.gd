@@ -35,7 +35,8 @@ var game_searcher: BaiChuanInstaller_GameSearcher = BaiChuanInstaller_GameSearch
 var pack_access: BaiChuanInstaller_PackAccess = BaiChuanInstaller_PackAccess.new()
 ## 脚本处理器
 var script_handler: BaiChuanInstaller_ScriptHandler = BaiChuanInstaller_ScriptHandler.new()
-
+## 上次安装或卸载操作是否成功
+var is_last_operation_successful: bool = false
 ## 连续的自动寻找失败计数，用于恶搞彩蛋
 var continuelly_autofind_failed_count: int = 0
 
@@ -64,12 +65,10 @@ func search_game() -> String:
 			_:
 				logger.log_warn("未找到游戏(无需重试，没用的)") #日志输出
 				OS.shell_open("https://ys-api.mihoyo.com/event/download_porter/link/ys_cn/official/pc_default") #打开浏览器下载原神
-				@warning_ignore("standalone_expression")
-				continuelly_autofind_failed_count == -2
+				continuelly_autofind_failed_count = 0
 		return "" #返回一个空文本
 	else:
-		@warning_ignore("standalone_expression")
-		continuelly_autofind_failed_count == 0
+		continuelly_autofind_failed_count = 0
 	for absolute_path in absolute_pathes: #遍历找到文件的路径列表
 		if (verify_md5(absolute_path)): #如果找到md5验证正确的文件
 			logger.log_info("找到了符合md5值的游戏文件") #日志输出
@@ -199,7 +198,7 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 	logger.log_info("安装包已载入")
 	return result
 
-## 开启多线程安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，不能返回成功与否
+## 开启多线程安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，可通过访问is_last_operation_successful取得成功与否(需注意在线程wait_to_finish()后访问，以免造成线程冲突)
 func multiple_threads_install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool, callbacks: Array[Callable] = []) -> void:
 	if (thread.is_alive()):
 		logger.log_error("BaiChuanInstaller: 安装器繁忙，将拒绝新的安装任务")
@@ -217,6 +216,7 @@ func install_with_callback(absolute_path: String, install_difficult: int, instal
 ## 安装，传入安装位置(Subnautica.exe所在的目录)、指定的难度、附属包、是否重新安装，并返回成功与否
 func install(absolute_path: String, install_difficult: int, install_addons: PackedInt32Array, reinstall: bool) -> bool:
 	logger.log_info("开始安装")
+	is_last_operation_successful = false
 	script_handler.install_path = absolute_path
 	var dir_access: DirAccess = DirAccess.open(absolute_path) #打开安装目录为DirAccess
 	if (dir_access == null): #如果为null，说明出错
@@ -367,9 +367,10 @@ func install(absolute_path: String, install_difficult: int, install_addons: Pack
 	## /05
 	## /01
 	logger.log_info("安装流程结束")
+	is_last_operation_successful = true
 	return true
 
-## 开启多线程卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置、在完成时执行的回调方法(回调方法必须是无参数的)，不能返回成功与否
+## 开启多线程卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置、在完成时执行的回调方法(回调方法必须是无参数的)，可通过访问is_last_operation_successful取得成功与否(需注意在线程wait_to_finish()后访问，以免造成线程冲突)
 func multiple_threads_uninstall(absolute_path: String, keep_framework: bool, callbacks: Array[Callable] = []) -> void:
 	if (thread.is_alive()):
 		logger.log_error("BaiChuanInstaller: 安装器繁忙，将拒绝新的卸载任务")
@@ -387,6 +388,7 @@ func uninstall_with_callback(absolute_path: String, keep_framework: bool, callba
 ## 卸载，传入安装位置(Subnautica.exe所在的目录)、是否保留前置，并返回成功与否
 func uninstall(absolute_path: String, keep_framework: bool) -> bool:
 	logger.log_info("开始卸载")
+	is_last_operation_successful = false
 	script_handler.install_path = absolute_path
 	if (FileAccess.file_exists(absolute_path.path_join(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME))): #如果存在卸载脚本
 		## 00执行卸载脚本
@@ -449,6 +451,7 @@ func uninstall(absolute_path: String, keep_framework: bool) -> bool:
 				logger.log_warn("卸载流程结束，过程中发生错误")
 				return false
 		logger.log_info("卸载流程结束")
+		is_last_operation_successful = true
 		return true
 	#else: #否则(不存在卸载脚本)
 	logger.log_warn("未找到卸载脚本，如需卸载请手动删除相关文件")

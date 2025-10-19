@@ -28,7 +28,7 @@ static func launch_as_install_method(installer: BaiChuanInstaller, launch_diffic
 	if (FileAccess.file_exists(install_meta_path)):
 		var install_meta_content: String = FileAccess.get_file_as_string(install_meta_path)
 		if (not install_meta_content.is_empty()):
-			var json: Dictionary[String, Variant] = JSON.parse_string(install_meta_content) as Dictionary[String, Variant]
+			var json: Dictionary = JSON.parse_string(install_meta_content) as Dictionary
 			if (
 				json.has("installer_version") and (json["installer_version"] as int) == BaiChuanInstaller.INSTALLER_VERSION
 				and

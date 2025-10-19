@@ -232,15 +232,18 @@ func _physics_process(_delta: float) -> void:
 		refresh_log()
 		if (not installer.thread.is_alive()):
 			is_operating = false
-			n_operation_install_confirm_button.disabled = false
-			n_operation_uninstall_confirm_button.disabled = false
-			n_launcher_confirm_button.disabled = false
 			if (is_launcher_activiting):
 				refresh_game_info_path(OS.get_executable_path().get_base_dir().path_join(BaiChuanLauncher.GAME_DIR).path_join(BaiChuanLauncher.GAME_NAME))
 				is_launcher_activiting = false
+				n_launcher_confirm_button.disabled = false
+				update_launch_confirm_button()
 			else:
 				refresh_game_info()
-			emit_signal(&"operation_finished", installer.thread.wait_to_finish())
+				n_operation_install_confirm_button.disabled = false
+				n_operation_uninstall_confirm_button.disabled = false
+			if (installer.thread.is_started()):
+				installer.thread.wait_to_finish()
+			emit_signal(&"operation_finished", installer.is_last_operation_successful)
 
 ## 程序关闭方法，此方法中要写临时目录的释放行为
 func quit_program() -> void:
@@ -688,6 +691,7 @@ func launcher_confirm() -> void:
 	n_operation_install_confirm_button.disabled = true
 	n_operation_uninstall_confirm_button.disabled = true
 	n_launcher_confirm_button.disabled = true
+	n_launcher_confirm_button.text = "正在启动\n" + meta_report.version_name + "、" + meta_report.difficults_names[launch_option_difficult_current] + "、" + str(launch_option_addons_current.size()) + "个附属包"
 	match (n_launcher_method_select.current_tab):
 		LauncherMethod.INSTALL:
 			BaiChuanLauncher.launch_as_install_method(installer, launch_option_difficult_current, launch_option_addons_current)

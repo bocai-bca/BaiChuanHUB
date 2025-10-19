@@ -18,7 +18,7 @@ func search_game_path_on_drives(drivers_names: PackedStringArray) -> PackedStrin
 	var same_dir_path: String = OS.get_executable_path().get_base_dir().path_join("Subnautica.exe")
 	if (FileAccess.file_exists(same_dir_path)):
 		result.append(same_dir_path)
-	var builtin_game_path: String = OS.get_executable_path().get_basename().path_join(BaiChuanLauncher.GAME_DIR).path_join(BaiChuanLauncher.GAME_NAME)
+	var builtin_game_path: String = OS.get_executable_path().get_base_dir().path_join(BaiChuanLauncher.GAME_DIR).path_join(BaiChuanLauncher.GAME_NAME)
 	if (FileAccess.file_exists(builtin_game_path)):
 		result.append(builtin_game_path)
 	for driver_name in drivers_names: #遍历给定的分区名
