@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://b6boxed5w0ujx"]
+[gd_scene load_steps=6 format=3 uid="uid://b6boxed5w0ujx"]
 
 [ext_resource type="Theme" uid="uid://cql86uwxm36wp" path="res://contents/main_earlymenu/theme.tres" id="1_kq37u"]
 [ext_resource type="Script" uid="uid://ubiqiglpve8g" path="res://contents/main_earlymenu/main_earlymenu.gd" id="2_tekc0"]
 [ext_resource type="Texture2D" uid="uid://beu0pefh5ovbs" path="res://contents/main_earlymenu/welcome_picture_0.jpg" id="3_x8ole"]
+[ext_resource type="Texture2D" uid="uid://d1736k1rxqpvn" path="res://contents/main_earlymenu/read_docs.jpg" id="4_sh76g"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x8ole"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -596,20 +597,36 @@ text = "未加载安装包"
 horizontal_alignment = 1
 
 [node name="Label" type="Label" parent="TabContainer/Docs"]
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
-size_flags_vertical = 6
-text = "并没有文档，有啥不懂的直接把必读全解喂给AI然后让它给你解答。
+size_flags_vertical = 10
+text = "玩百川归海必须看必读全解，就算你不想看那么长也至少看完注意事项再玩。
+愿意往后看或者玩的时候查就少踩坑。
+不想看全解也没关系，踩坑影响的是你的游戏体验，别到时候来怪整合包就行。
 ——光暗主宰者"
 horizontal_alignment = 1
-vertical_alignment = 1
+vertical_alignment = 2
+autowrap_mode = 1
 
-[node name="LinkButton" type="LinkButton" parent="TabContainer/Docs"]
+[node name="TextureRect" type="TextureRect" parent="TabContainer/Docs"]
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("4_sh76g")
+stretch_mode = 2
+
+[node name="LinkButton" type="Button" parent="TabContainer/Docs"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+size_flags_stretch_ratio = 0.5
+text = "点击打开DeepSeek网页"
+
+[node name="LinkButton2" type="Button" parent="TabContainer/Docs"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 2
-text = "点击打开DeepSeek网页"
-underline = 1
-uri = "https://chat.deepseek.com/"
+size_flags_stretch_ratio = 0.5
+text = "点击打开包内必读全解文档"
 
 [connection signal="pressed" from="TabContainer/Welcome/ContinueButton" to="." method="welcome_continue"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/RejectButton" to="." method="eula_reject"]

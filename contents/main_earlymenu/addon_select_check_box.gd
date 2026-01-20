@@ -25,3 +25,22 @@ func if_difficult_disable(current_difficult: int) -> bool:
 		disabled = true #禁用
 		button_pressed = false
 		return false
+
+## 设置颜色，通常只在按钮刚实例化后使用
+func set_color(text_color: Color, text_outline_color: Color, fill_color: Color) -> void:
+	var stylebox: StyleBoxFlat = (get_theme_stylebox(&"normal", &"CheckBox") as StyleBoxFlat).duplicate(true)
+	stylebox.bg_color = Color(fill_color, 0.121)
+	add_theme_stylebox_override(&"normal", stylebox)
+	add_theme_stylebox_override(&"pressed", stylebox)
+	stylebox = (get_theme_stylebox(&"hover", &"CheckBox") as StyleBoxFlat).duplicate(true)
+	stylebox.bg_color = Color(fill_color, 0.372)
+	add_theme_stylebox_override(&"hover", stylebox)
+	add_theme_stylebox_override(&"hover_pressed", stylebox)
+	stylebox = (get_theme_stylebox(&"disabled", &"CheckBox") as StyleBoxFlat).duplicate(true)
+	stylebox.bg_color = Color(fill_color, 0.121)
+	add_theme_stylebox_override(&"disabled", stylebox)
+	add_theme_color_override(&"font_color", text_color)
+	add_theme_color_override(&"font_focus_color", text_color)
+	add_theme_color_override(&"font_hover_color", text_color)
+	add_theme_color_override(&"font_disabled_color", text_color * 0.6)
+	add_theme_color_override(&"font_outline_color", text_outline_color)

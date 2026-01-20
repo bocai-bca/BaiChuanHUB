@@ -179,16 +179,16 @@ func load_new_pack(pack_path: String, need_unzip: bool) -> PackMetaReport:
 	result.version_name = pack_access.pack_meta.version_name
 	result.fork_version = pack_access.pack_meta.fork_version
 	result.mods_count = pack_access.pack_meta.mods_list.size()
-	result.difficults_names = []
-	result.difficults_pathes = []
-	for difficult in pack_access.pack_meta.difficults_list: #遍历难度列表
-		result.difficults_names.append(difficult.name)
-		result.difficults_pathes.append(difficult.path)
+	result.difficults = pack_access.pack_meta.difficults_list
 	result.addons = []
 	for addon in pack_access.pack_meta.addons_list: #遍历附属包列表
 		var addon_meta:PackMetaReport_AddonsMeta = PackMetaReport_AddonsMeta.new(addon.name)
 		for addon_support_difficult in addon.support_difficults: #遍历该附属包支持的所有难度
-			var find_index: int = result.difficults_pathes.find(addon_support_difficult)
+			var find_index: int
+			for difficult_index in result.difficults.size():
+				if (result.difficults[difficult_index].path == addon_support_difficult):
+					find_index = difficult_index
+					break
 			if (find_index == -1 and addon_support_difficult == "_"): #如果未找到，并且该难度为_，说明是通配难度
 				addon_meta.support_difficults = [255] #只需要添加一个255代表啥都有即可
 				break #既然有通配难度的话那么只要记录它就行了，直接break
@@ -494,10 +494,8 @@ class GameStateReport extends RefCounted:
 
 ## 安装包元数据报告
 class PackMetaReport extends RefCounted:
-	## 难度名称表，其索引与pack_access.pack_meta.difficults_list一一对应
-	var difficults_names: PackedStringArray
-	## 难度路径表，其索引与pack_access.pack_meta.difficults_list一一对应
-	var difficults_pathes: PackedStringArray
+	## 难度表
+	var difficults: Array[BaiChuanInstaller_PackAccess.DifficultObject]
 	## 模组数量(pack.json中注册的数量，而非模组目录中的数量)
 	var mods_count: int
 	## 附属包表，其索引与pack_access.pack_meta.addons_list一一对应

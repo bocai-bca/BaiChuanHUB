@@ -96,7 +96,7 @@ const TabsNames: PackedStringArray = [
 	"使用协议",
 	"启动器",
 	"安装器",
-	"问题查询文档"
+	"必读全解"
 ]
 const InstallerOperationTabsNames: PackedStringArray = [
 	"安装",
@@ -230,6 +230,17 @@ func _ready() -> void:
 		n_launcher_unavailable_text.visible = true
 		n_launcher_total_vbc.visible = false
 	n_launcher_method_tip.text = LauncherMethodTipText[0]
+	# 必读全解页面
+	($TabContainer/Docs/LinkButton as Button).pressed.connect(
+		func() -> void:
+			OS.shell_open("https://chat.deepseek.com/")
+	)
+	($TabContainer/Docs/LinkButton2 as Button).pressed.connect(
+		func() -> void:
+			var docs_file_path: String = OS.get_executable_path().get_base_dir().path_join("pack").path_join("bdqj.docx")
+			if (FileAccess.file_exists(docs_file_path)):
+				OS.shell_open(docs_file_path)
+	)
 
 func _physics_process(_delta: float) -> void:
 	if (is_operating):
@@ -360,9 +371,9 @@ func load_install_pack(pack_path: String) -> void:
 				refresh_log() #刷新日志
 				return
 			is_pack_load_success = true
-			n_mod_pack_tip_text.text = "捆绑式安装包就绪：版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
+			n_mod_pack_tip_text.text = "捆绑式安装包就绪：版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
 			n_mod_pack_tip_text.modulate = Color.GREEN
-			n_launcher_pack_info.text = "版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
+			n_launcher_pack_info.text = "版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
 			n_launcher_pack_info.modulate = Color.GREEN
 		false:
 			if (not FileAccess.file_exists(pack_path)): #如果文件不存在
@@ -392,9 +403,9 @@ func place_install_option_nodes() -> void:
 	## 01放置新节点
 	if (meta_report == null): #如果元数据报告为null
 		return
-	for i in meta_report.difficults_names.size(): #按索引遍历所有难度名称
+	for i in meta_report.difficults.size(): #按索引遍历所有难度名称
 		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate() as EarlyMenu_DifficultSelectCheckBox
-		new_check_box.text = meta_report.difficults_names[i]
+		new_check_box.text = meta_report.difficults[i].name
 		new_check_box.difficult_index = i
 		new_check_box.pressed.connect(
 			func() -> void:
@@ -405,6 +416,7 @@ func place_install_option_nodes() -> void:
 		)
 		install_option_difficults_nodes.append(new_check_box)
 		n_operation_install_option_difficults_container.add_child(new_check_box)
+		new_check_box.set_color(Color.WHITE, Color.WHITE * 0.6, meta_report.difficults[i].fill_color)
 	for i in meta_report.addons.size(): #按索引遍历所有附属包名称
 		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate() as EarlyMenu_AddonSelectCheckBox
 		new_check_box.text = meta_report.addons[i].name
@@ -439,10 +451,10 @@ func place_launch_option_nodes() -> void:
 	## 01放置新节点
 	if (meta_report == null): #如果元数据报告为null
 		return
-	for i in meta_report.difficults_names.size(): #按索引遍历所有难度名称
+	for i in meta_report.difficults.size(): #按索引遍历所有难度
 		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate() as EarlyMenu_DifficultSelectCheckBox
 		new_check_box.button_group = preload("res://contents/main_earlymenu/difficult_button_group_launcher.tres")
-		new_check_box.text = meta_report.difficults_names[i]
+		new_check_box.text = meta_report.difficults[i].name
 		new_check_box.difficult_index = i
 		new_check_box.pressed.connect(
 			func() -> void:
@@ -453,6 +465,7 @@ func place_launch_option_nodes() -> void:
 		)
 		launch_option_difficults_nodes.append(new_check_box)
 		n_launcher_select_difficult_container.add_child(new_check_box)
+		new_check_box.set_color(Color.WHITE, Color.WHITE * 0.6, meta_report.difficults[i].fill_color)
 	for i in meta_report.addons.size(): #按索引遍历所有附属包名称
 		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate() as EarlyMenu_AddonSelectCheckBox
 		new_check_box.text = meta_report.addons[i].name
@@ -547,7 +560,7 @@ func update_launch_confirm_button() -> void:
 	if (launch_option_difficult_current != -1):
 		n_launcher_confirm_button.disabled = false
 		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		n_launcher_confirm_button.text = LauncherMethodName[n_launcher_method_select.current_tab] + "启动\n" + meta_report.version_name + "、" + meta_report.difficults_names[launch_option_difficult_current] + "、" + str(launch_option_addons_current.size()) + "个附属包"
+		n_launcher_confirm_button.text = LauncherMethodName[n_launcher_method_select.current_tab] + "启动\n" + meta_report.version_name + "、" + meta_report.difficults[launch_option_difficult_current].name + "、" + str(launch_option_addons_current.size()) + "个附属包"
 	else:
 		n_launcher_confirm_button.disabled = true
 		n_launcher_confirm_button.mouse_default_cursor_shape = Control.CURSOR_FORBIDDEN
