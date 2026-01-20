@@ -77,13 +77,13 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 		return false
 	## /00
 	## 01元数据反序列化
-	pack_meta.version = parsed["version"]
-	pack_meta.version_name = parsed["version_name"]
-	pack_meta.fork_version = parsed["fork_version"]
+	pack_meta.version = parsed["version"] as int
+	pack_meta.version_name = parsed["version_name"] as String
+	pack_meta.fork_version = parsed["fork_version"] as int
 	pack_meta.difficults_list = []
 	for difficult_object in parsed["difficults"] as Array[Dictionary]:
 		if (difficult_object.has("path") and difficult_object.has("name")):
-			pack_meta.difficults_list.append(PathNameObject.new(difficult_object["path"], difficult_object["name"]))
+			pack_meta.difficults_list.append(PathNameObject.new(difficult_object["path"] as String, difficult_object["name"] as String))
 			continue
 		logger.log_error("PackAccess: 解析元数据时发现问题，难度列表有必要键丢失，解析将中止")
 		return false
@@ -101,8 +101,8 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 		return false
 	for addon_object in parsed["addons"] as Array[Dictionary]:
 		if (addon_object.has("path") and addon_object.has("name")):
-			var addon_path: String = addon_object["path"]
-			var addon_name: String = addon_object["name"]
+			var addon_path: String = addon_object["path"] as String
+			var addon_name: String = addon_object["name"] as String
 			var addon_registry_object: AddonRegistryObject = AddonRegistryObject.new(addon_path, addon_name)
 			if (not dir_access.file_exists(ADDONS_DIR.path_join(addon_path).path_join(ADDON_META))): #如果不存在安装包元数据
 				logger.log_error("PackAccess: 解析元数据时发现问题，附属包\"" + addon_name + "\"(" + addon_path + ")缺少元数据文件，解析将中止")
@@ -126,11 +126,15 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 					continue
 				logger.log_error("PackAccess: 解析附属包\"" + addon_name + "\"(" + addon_path + ")元数据时发现问题，模组列表有必要键丢失，解析将中止")
 				return false
-			addon_registry_object.support_difficults = dir_access.get_directories_at(dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(addon_path).path_join(DIFFICULTS_DIR)) #获取该附属包的所有难度
+			addon_registry_object.support_difficults = DirAccess.get_directories_at(dir_access.get_current_dir().path_join(ADDONS_DIR).path_join(addon_path).path_join(DIFFICULTS_DIR)) #获取该附属包的所有难度
 			pack_meta.addons_list.append(addon_registry_object)
 			continue
 		logger.log_error("PackAccess: 解析元数据时发现问题，附属包列表有必要键丢失，解析将中止")
 		return false
+	##  02解析特殊数据
+	pack_meta.special_mark = PackMetaSpecialMark.new()
+	pack_meta.special_mark.chinese_path_warning = parsed.get("chinese_path_warning", false) as bool
+	##  /02
 	## /01
 	return true
 
@@ -307,6 +311,12 @@ class PackMeta extends RefCounted:
 	var mods_list: Array[ModRegistryObject]
 	## 附属包表
 	var addons_list: Array[AddonRegistryObject]
+	## 包元数据特殊标识
+	var special_mark: PackMetaSpecialMark
+
+## 包元数据特殊标识，通常表示某次版本更新后添加的新元数据
+class PackMetaSpecialMark extends RefCounted:
+	var chinese_path_warning: bool
 
 ## 路径名称对象，用于记录pack.json中列表中的对象
 class PathNameObject extends RefCounted:

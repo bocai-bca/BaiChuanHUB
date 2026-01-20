@@ -96,7 +96,7 @@ const TabsNames: PackedStringArray = [
 	"使用协议",
 	"启动器",
 	"安装器",
-	"常见问题查询(开发中)"
+	"问题查询文档"
 ]
 const InstallerOperationTabsNames: PackedStringArray = [
 	"安装",
@@ -134,7 +134,7 @@ var is_eula_agreed: bool = false:
 		if (value and is_node_ready()):
 			n_tab_container.set_tab_disabled(Tabs.LAUNCHER, false) #解锁启动器
 			n_tab_container.set_tab_disabled(Tabs.INSTALLER, false) #解锁安装器
-			#n_tab_container.set_tab_disabled(Tabs.DOCS, false) #解锁文档
+			n_tab_container.set_tab_disabled(Tabs.DOCS, false) #解锁文档
 		is_eula_agreed = value
 ## 游戏路径指定是否已就绪
 var is_game_path_ready: bool = false
@@ -142,11 +142,12 @@ var is_game_path_ready: bool = false
 var is_pack_load_success: bool = false:
 	set(value):
 		if (value):
-			n_docs_pack_not_loaded_label.visible = false
-			n_docs_menu_container.visible = true
-			n_docs_info_text.visible = true
+			#n_docs_pack_not_loaded_label.visible = false
+			#n_docs_menu_container.visible = true
+			#n_docs_info_text.visible = true
+			pass
 		else:
-			n_docs_pack_not_loaded_label.visible = true
+			#n_docs_pack_not_loaded_label.visible = true
 			n_docs_menu_container.visible = false
 			n_docs_info_text.visible = false
 		is_pack_load_success = value
@@ -186,6 +187,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	BaiChuanLauncher.logger = installer.logger
+	BaiChuanLauncher.pack_access = installer.pack_access
 	if (OS.get_name() == "Windows"):
 		var version_alias: String = OS.get_version_alias()
 		if (version_alias.begins_with("10 ") or version_alias.begins_with("11 ")):
@@ -218,7 +220,9 @@ func _ready() -> void:
 			n_launcher_unavailable_text.visible = true
 			n_launcher_unavailable_text.text = "无法使用启动器\n安装包加载失败"
 		place_install_option_nodes()
+		update_install_addons_checkboxes_disable()
 		place_launch_option_nodes()
+		update_launch_addons_checkboxes_disable()
 		update_install_confirm_button()
 		update_launch_confirm_button()
 	else:

@@ -4,9 +4,16 @@ class_name BaiChuanLauncher
 
 const GAME_DIR: String = "game"
 const GAME_NAME: String = "Subnautica.exe"
+const PATH_ENCODE_SAFETY_CHARACTERS: PackedStringArray = [
+	"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+	"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+	"_", "-", ".", ",", "/", "\\", ":"
+]
 
 ## 启动器将通过此日志进行GUI日志输出
 static var logger: BaiChuanInstaller_Logger
+## 安装包访问
+static var pack_access: BaiChuanInstaller_PackAccess
 ## 多线程互斥锁
 static var mutex: Mutex
 ## 多线程线程实例
@@ -69,6 +76,10 @@ static func run_game() -> void:
 			logger.log_error("BaiChuanLauncher: 未能获取进程PID，进程可能启动失败")
 		else:
 			logger.log_info("游戏已启动，PID:" + str(pid))
+			if (pack_access.pack_meta.special_mark.chinese_path_warning):
+				var unsafe_char_index: int = check_path_encode_safety(absolute_path)
+				if (unsafe_char_index != -1):
+					logger.log_warn("注意到当前执行路径存在路径编码安全范围外的字符，可能导致游戏在启动后崩溃，发现问题字符：" + absolute_path[unsafe_char_index])
 	else:
 		logger.log_error("BaiChuanLauncher: 启动前未找到游戏可执行文件，位置:" + absolute_path)
 
@@ -76,3 +87,12 @@ static func run_game() -> void:
 static func sort_int32_arr_and_back(arr: PackedInt32Array) -> PackedInt32Array:
 	arr.sort()
 	return arr
+
+## 检测游戏执行路径是否含有可能导致出问题的字符，若发现问题将返回第一个导致问题的字符的索引，没问题返回-1
+static func check_path_encode_safety(the_path: String) -> int:
+	the_path = the_path.to_lower()
+	for index in the_path.length():
+		var current_char: String = the_path[index]
+		if (not PATH_ENCODE_SAFETY_CHARACTERS.has(current_char)):
+			return index
+	return -1

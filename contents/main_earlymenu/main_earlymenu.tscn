@@ -30,10 +30,11 @@ script = ExtResource("2_tekc0")
 layout_mode = 2
 theme = ExtResource("1_kq37u")
 tab_alignment = 1
-current_tab = 0
+current_tab = 4
 tab_focus_mode = 0
 
 [node name="Welcome" type="VBoxContainer" parent="TabContainer"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -537,15 +538,16 @@ selection_enabled = true
 drag_and_drop_selection_enabled = false
 
 [node name="Docs" type="VBoxContainer" parent="TabContainer"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 4
 
 [node name="InfoText" type="Label" parent="TabContainer/Docs"]
+visible = false
 layout_mode = 2
 horizontal_alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="TabContainer/Docs"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -592,6 +594,22 @@ layout_mode = 2
 size_flags_vertical = 6
 text = "未加载安装包"
 horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="TabContainer/Docs"]
+layout_mode = 2
+size_flags_vertical = 6
+text = "并没有文档，有啥不懂的直接把必读全解喂给AI然后让它给你解答。
+——光暗主宰者"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LinkButton" type="LinkButton" parent="TabContainer/Docs"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 2
+text = "点击打开DeepSeek网页"
+underline = 1
+uri = "https://chat.deepseek.com/"
 
 [connection signal="pressed" from="TabContainer/Welcome/ContinueButton" to="." method="welcome_continue"]
 [connection signal="pressed" from="TabContainer/EULA/AgreeButtonBar/RejectButton" to="." method="eula_reject"]
