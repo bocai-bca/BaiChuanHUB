@@ -7,7 +7,7 @@ const GAME_NAME: String = "Subnautica.exe"
 const PATH_ENCODE_SAFETY_CHARACTERS: PackedStringArray = [
 	"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 	"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-	"_", "-", ".", ",", "/", "\\", ":"
+	"_", "-", ".", ",", "/", "\\", ":", " "
 ]
 
 ## 启动器将通过此日志进行GUI日志输出
@@ -79,7 +79,7 @@ static func run_game() -> void:
 			if (pack_access.pack_meta.special_mark.chinese_path_warning):
 				var unsafe_char_index: int = check_path_encode_safety(absolute_path)
 				if (unsafe_char_index != -1):
-					logger.log_warn("注意到当前执行路径存在路径编码安全范围外的字符，可能导致游戏在启动后崩溃，发现问题字符：" + absolute_path[unsafe_char_index])
+					logger.log_warn("游戏可能在启动不久后崩溃，若确实发生，可尝试通过避免启动器路径中存在诸如中文等字符来解决。问题字符：" + absolute_path[unsafe_char_index])
 	else:
 		logger.log_error("BaiChuanLauncher: 启动前未找到游戏可执行文件，位置:" + absolute_path)
 

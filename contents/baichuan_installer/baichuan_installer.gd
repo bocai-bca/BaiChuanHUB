@@ -511,7 +511,7 @@ class PackMetaReport extends RefCounted:
 class PackMetaReport_AddonsMeta extends RefCounted:
 	## 附属包显示名称
 	var name: String
-	## 支持的难度列表，存储对应于PackMetaReport.difficults_names的索引，-1代表任意难度
+	## 支持的难度列表，存储对应于PackMetaReport.difficults的索引，-1代表任意难度
 	var support_difficults: PackedByteArray
 	func _init(new_name: String, new_support_difficults: PackedByteArray = []) -> void:
 		name = new_name

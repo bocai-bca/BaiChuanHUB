@@ -219,6 +219,8 @@ func _ready() -> void:
 			n_launcher_total_vbc.visible = false
 			n_launcher_unavailable_text.visible = true
 			n_launcher_unavailable_text.text = "无法使用启动器\n安装包加载失败"
+			if (not DirAccess.dir_exists_absolute(load_path)):
+				n_launcher_unavailable_text.text = "无法使用启动器\n捆绑式安装包丢失"
 		place_install_option_nodes()
 		update_install_addons_checkboxes_disable()
 		place_launch_option_nodes()
@@ -226,7 +228,7 @@ func _ready() -> void:
 		update_install_confirm_button()
 		update_launch_confirm_button()
 	else:
-		n_launcher_unavailable_text.text = "无法使用启动器\n启动器必须使用捆绑式安装包"
+		n_launcher_unavailable_text.text = "当前已禁用启动器\n未使用捆绑式安装包模式"
 		n_launcher_unavailable_text.visible = true
 		n_launcher_total_vbc.visible = false
 	n_launcher_method_tip.text = LauncherMethodTipText[0]
@@ -388,7 +390,7 @@ func load_install_pack(pack_path: String) -> void:
 				refresh_log() #刷新日志
 				return
 			is_pack_load_success = true
-			n_mod_pack_tip_text.text = "安装包就绪: 版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults_names.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
+			n_mod_pack_tip_text.text = "安装包就绪: 版本" + meta_report.version_name + "(v" + str(meta_report.version) + "." + str(meta_report.fork_version) + ")，包含" + str(meta_report.difficults.size()) + "个难度、" + str(meta_report.mods_count) + "个模组、" + str(meta_report.addons.size()) + "个附属包"
 			n_mod_pack_tip_text.modulate = Color.GREEN
 	refresh_log() #刷新日志
 
@@ -404,8 +406,9 @@ func place_install_option_nodes() -> void:
 	if (meta_report == null): #如果元数据报告为null
 		return
 	for i in meta_report.difficults.size(): #按索引遍历所有难度名称
+		var current_difficult: BaiChuanInstaller_PackAccess.DifficultObject = meta_report.difficults[i]
 		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate() as EarlyMenu_DifficultSelectCheckBox
-		new_check_box.text = meta_report.difficults[i].name
+		new_check_box.text = current_difficult.name
 		new_check_box.difficult_index = i
 		new_check_box.pressed.connect(
 			func() -> void:
@@ -416,7 +419,10 @@ func place_install_option_nodes() -> void:
 		)
 		install_option_difficults_nodes.append(new_check_box)
 		n_operation_install_option_difficults_container.add_child(new_check_box)
-		new_check_box.set_color(Color.WHITE, Color.WHITE * 0.6, meta_report.difficults[i].fill_color)
+		if (current_difficult.text_full_fill):
+			new_check_box.set_color(current_difficult.fill_color, current_difficult.fill_color * 0.6, current_difficult.fill_color)
+		else:
+			new_check_box.set_color(Color.WHITE, Color.WHITE * 0.6, current_difficult.fill_color)
 	for i in meta_report.addons.size(): #按索引遍历所有附属包名称
 		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate() as EarlyMenu_AddonSelectCheckBox
 		new_check_box.text = meta_report.addons[i].name
@@ -452,9 +458,10 @@ func place_launch_option_nodes() -> void:
 	if (meta_report == null): #如果元数据报告为null
 		return
 	for i in meta_report.difficults.size(): #按索引遍历所有难度
+		var current_difficult: BaiChuanInstaller_PackAccess.DifficultObject = meta_report.difficults[i]
 		var new_check_box: EarlyMenu_DifficultSelectCheckBox = EarlyMenu_DifficultSelectCheckBox.CPS.instantiate() as EarlyMenu_DifficultSelectCheckBox
 		new_check_box.button_group = preload("res://contents/main_earlymenu/difficult_button_group_launcher.tres")
-		new_check_box.text = meta_report.difficults[i].name
+		new_check_box.text = current_difficult.name
 		new_check_box.difficult_index = i
 		new_check_box.pressed.connect(
 			func() -> void:
@@ -465,7 +472,10 @@ func place_launch_option_nodes() -> void:
 		)
 		launch_option_difficults_nodes.append(new_check_box)
 		n_launcher_select_difficult_container.add_child(new_check_box)
-		new_check_box.set_color(Color.WHITE, Color.WHITE * 0.6, meta_report.difficults[i].fill_color)
+		if (current_difficult.text_full_fill):
+			new_check_box.set_color(current_difficult.fill_color, current_difficult.fill_color * 0.6, current_difficult.fill_color)
+		else:
+			new_check_box.set_color(Color.WHITE, Color.WHITE * 0.6, current_difficult.fill_color)
 	for i in meta_report.addons.size(): #按索引遍历所有附属包名称
 		var new_check_box: EarlyMenu_AddonSelectCheckBox = EarlyMenu_AddonSelectCheckBox.CPS.instantiate() as EarlyMenu_AddonSelectCheckBox
 		new_check_box.text = meta_report.addons[i].name
@@ -536,7 +546,7 @@ func update_install_confirm_button() -> void:
 		n_operation_install_confirm_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		var install_text_prefix: String
 		install_text_prefix = "覆盖安装：" if install_option_reinstall else "开始安装："
-		n_operation_install_confirm_button.text = install_text_prefix + meta_report.version_name + "、" + meta_report.difficults_names[install_option_difficult_current] + "、" + str(install_option_addons_current.size()) + "个附属包"
+		n_operation_install_confirm_button.text = install_text_prefix + meta_report.version_name + "、" + meta_report.difficults[install_option_difficult_current].name + "、" + str(install_option_addons_current.size()) + "个附属包"
 	else:
 		n_operation_install_confirm_button.disabled = true
 		n_operation_install_confirm_button.text = "请选择难度"
@@ -708,7 +718,7 @@ func launcher_confirm() -> void:
 	n_operation_install_confirm_button.disabled = true
 	n_operation_uninstall_confirm_button.disabled = true
 	n_launcher_confirm_button.disabled = true
-	n_launcher_confirm_button.text = "正在启动\n" + meta_report.version_name + "、" + meta_report.difficults_names[launch_option_difficult_current] + "、" + str(launch_option_addons_current.size()) + "个附属包"
+	n_launcher_confirm_button.text = "正在启动\n" + meta_report.version_name + "、" + meta_report.difficults[launch_option_difficult_current].name + "、" + str(launch_option_addons_current.size()) + "个附属包"
 	match (n_launcher_method_select.current_tab):
 		LauncherMethod.INSTALL:
 			BaiChuanLauncher.launch_as_install_method(installer, launch_option_difficult_current, launch_option_addons_current)

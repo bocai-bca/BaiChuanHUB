@@ -82,12 +82,12 @@ func parse_meta(logger: BaiChuanInstaller_Logger) -> bool:
 	pack_meta.fork_version = parsed["fork_version"] as int
 	pack_meta.difficults_list = []
 	for difficult_object in parsed["difficults"] as Array[Dictionary]:
-		if (difficult_object.has("path") and difficult_object.has("name") and difficult_object.has("fill_color")):
+		if (difficult_object.has("path") and difficult_object.has("name") and difficult_object.has("fill_color") and difficult_object.has("text_full_fill")):
 			var fill_color: String = difficult_object["fill_color"] as String
 			if (not Color.html_is_valid(fill_color)):
 				logger.log_error("PackAccess: 解析元数据时发现问题，难度\"" + difficult_object["name"] + "\"的填充颜色值不是有效的HTML十六进制颜色字符串，解析将中止")
 				return false
-			pack_meta.difficults_list.append(DifficultObject.new(difficult_object["path"] as String, difficult_object["name"] as String, Color.html(fill_color)))
+			pack_meta.difficults_list.append(DifficultObject.new(difficult_object["path"] as String, difficult_object["name"] as String, Color.html(fill_color), difficult_object["text_full_fill"] as bool))
 			continue
 		logger.log_error("PackAccess: 解析元数据时发现问题，难度列表有必要键丢失，解析将中止")
 		return false
@@ -330,10 +330,13 @@ class DifficultObject extends RefCounted:
 	var name: String
 	## 按钮背景颜色
 	var fill_color: Color
-	func _init(new_path: String, new_name: String, new_fill_color: Color) -> void:
+	## 是否使文本颜色被填充为按钮背景颜色
+	var text_full_fill: bool
+	func _init(new_path: String, new_name: String, new_fill_color: Color, new_text_full_fill: bool) -> void:
 		path = new_path
 		name = new_name
 		fill_color = new_fill_color
+		text_full_fill = new_text_full_fill
 
 ## 路径名称对象，用于记录pack.json中列表中的对象
 class PathNameObject extends RefCounted:

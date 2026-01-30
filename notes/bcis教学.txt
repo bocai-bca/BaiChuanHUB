@@ -47,15 +47,15 @@ cf g "BaiChuan/test.txt" "QMods/CustomCraft2SML/WorkingFiles/test.txt"
 // ====================
 
 //与cf这种复制文件对应的是cd，它的全称是copydir，即复制目录，而语法上是差不多的
-//注意：是复制目录到另一处位置，而不是目录中的内容，如果需要复制一个目录中的所有内容到另一处，需要手动一个个地用cf，但有一个小技巧，cd命令在复制到目的地目录时如果已经存在，将进行文件夹合并，并且会递归地在内部继续合并
+//cd命令会对目的地处已存在的目录进行合并操作
 
 //注意：源参数和目的地参数都是目录路径
 
-//⬇️作用：将安装包中的data/custom/WorkingFiles目录复制到Subnautica/QMods/CustomCraft2SML目录，可以实现将源目录下的文件全都复制到CustomCraft2SML/WorkingFiles的效果
-cd p "data/custom/WorkingFiles" "QMods/CustomCraft2SML"
+//⬇️作用：将安装包中的data/custom/WorkingFiles目录中的所有内容复制到Subnautica/QMods/CustomCraft2SML/WorkingFiles目录
+cd p "data/custom/WorkingFiles" "QMods/CustomCraft2SML/WorkingFiles"
 
-//⬇️作用：将Subnautica/BaiChuan/WorkingFiles目录复制到Subnautica/QMods/CustomCraft2SML目录
-cd g "BaiChuan/WorkingFiles" "QMods/CustomCraft2SML"
+//⬇️作用：将Subnautica/BaiChuan/WorkingFiles目录复制到Subnautica/QMods/CustomCraft2SML/WorkingFiles目录
+cd g "BaiChuan/WorkingFiles" "QMods/CustomCraft2SML/WorkingFiles"
 
 // ====================
 

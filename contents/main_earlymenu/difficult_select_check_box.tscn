@@ -22,3 +22,6 @@ theme_override_styles/disabled = ExtResource("2_fdp20")
 theme_override_styles/focus = ExtResource("1_svkpa")
 button_group = ExtResource("1_uyrad")
 script = ExtResource("2_qmiik")
+
+[connection signal="mouse_entered" from="." to="." method="on_focus_entered"]
+[connection signal="mouse_exited" from="." to="." method="on_focus_exited"]
