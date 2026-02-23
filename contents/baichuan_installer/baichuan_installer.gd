@@ -131,7 +131,7 @@ func game_state_detect(absolute_path: String) -> GameStateReport:
 	if (files.has(BaiChuanInstaller_PackAccess.UNINSTALL_SCRIPT_NAME)): #如果存在卸载脚本
 		#logger.log_info("已找到百川卸载脚本文件")
 		i += 1
-	if (root_dir.file_exists("QMods/CustomCraft2SML/WorkingFiles/AllriversflowtotheseaRESET.txt")): #如果存在百川mod特征文件
+	if (root_dir.file_exists("QMods/CustomCraft2SML/WorkingFiles/AllriversflowtotheseaRESET.txt") or root_dir.file_exists("QMods/CustomCraft2SML/WorkingFiles/AllriversflowtotheseaRESETs.txt")): #如果存在百川mod特征文件
 		#logger.log_info("已找到百川mod特征文件")
 		i += 1
 	if (root_dir.file_exists(BaiChuanInstaller_PackAccess.INSTALLED_META)): #如果存在安装元数据
